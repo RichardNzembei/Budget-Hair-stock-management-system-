@@ -1,18 +1,26 @@
 <template>
   <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6 text-center text-sky-500">STOCK DASHBOARD</h1>
+    <h1 class="text-xl font-bold mb-6 text-center text-sky-500">STOCK DASHBOARD</h1>
 
     <!-- Dashboard Overview -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
       <!-- Stock Overview -->
       <div class="bg-white p-6 rounded-lg shadow-lg">
-        <h2 class="font-semibold text-lg mb-4 text-gray-700">STOCK OVERVIEW</h2>
+        <h2 class="font-semibold text-md mb-4 text-gray-700">STOCK OVERVIEW</h2>
         <ul class="space-y-6">
-          <li v-for="(subtypes, productType) in stock" :key="productType" class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
-            <h3 class="font-semibold text-xl text-indigo-600 mb-2">{{ productType.toUpperCase() }}</h3>
+          <li
+            v-for="(subtypes, productType) in stock"
+            :key="productType"
+            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300"
+          >
+            <h3 class="font-semibold text-sm text-indigo-600 mb-2">{{ productType.toUpperCase() }}</h3>
             <ul class="space-y-2">
-              <li v-for="(quantity, productSubtype) in subtypes" :key="productSubtype" class="text-gray-800 space-x-4">
-                <span class="font-medium text-gray-600">{{ productSubtype.toUpperCase() }}:</span> 
+              <li
+                v-for="(quantity, productSubtype) in subtypes"
+                :key="productSubtype"
+                class="text-gray-800 space-x-4"
+              >
+                <span class="font-medium text-gray-600">{{ productSubtype.toUpperCase() }}:</span>
                 <span class="text-green-500 font-semibold">{{ quantity }}</span>
               </li>
             </ul>
@@ -22,13 +30,22 @@
 
       <!-- Sales Overview -->
       <div class="bg-white p-6 rounded shadow-md">
-        <h2 class="font-semibold text-lg mb-4 text-gray-700">SALES OVERVIEW</h2>
+        <h2 class="font-semibold text-md mb-4 text-gray-700">SALES OVERVIEW</h2>
         <ul class="space-y-4">
-          <li v-for="sale in salesItems" :key="sale.id" class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
-            <strong class="text-indigo-600">{{ sale.productType.toUpperCase() }}</strong><br>
-            <span class="text-gray-600">{{ sale.productSubtype.toUpperCase() }}:</span> 
-            <span class="text-red-500">{{ sale.quantitySold }} SOLD</span>
-            <span class="text-gray-400"> ON {{ sale.saleDate.toUpperCase() }}</span>
+          <li
+            v-for="sale in salesItems"
+            :key="sale.id"
+            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4"
+          >
+            <div>
+              <strong class="text-indigo-600">{{ sale.productType.toUpperCase() }}</strong>
+              <br />
+              <span class="text-gray-600">{{ sale.productSubtype.toUpperCase() }}:</span>
+              <span class="text-red-500">{{ sale.quantitySold }}</span>
+            </div>
+            <div class="text-gray-400 text-sm flex justify-end">
+              {{ sale.saleTime }}
+            </div>
           </li>
         </ul>
       </div>
@@ -51,7 +68,12 @@ const loadStockFromLocalStorage = () => {
   }
 
   const storedSales = JSON.parse(localStorage.getItem('sales')) || [];
-  salesItems.value = storedSales;
+
+  // Use stored sale time or fall back to the already saved saleTime during sale creation
+  salesItems.value = storedSales.map(sale => ({
+    ...sale,
+    saleTime: sale.saleTime || '',
+  }));
 };
 
 // Initialize data on component mount
@@ -77,7 +99,14 @@ ul li:hover {
   cursor: pointer;
 }
 
-h2, h3, strong, span {
+h2,
+h3,
+strong,
+span {
   text-transform: uppercase;
+}
+
+.text-gray-400 {
+  font-size: 0.875rem;
 }
 </style>

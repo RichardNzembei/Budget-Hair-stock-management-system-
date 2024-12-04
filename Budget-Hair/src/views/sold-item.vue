@@ -1,179 +1,150 @@
 <template>
     <div class="container mx-auto py-8">
-      <h1 class="text-3xl font-bold mb-6 text-center text-sky-500">Add New Product</h1>
-    
+      <h1 class="text-3xl font-bold mb-6 text-center text-sky-500">Sell Products</h1>
       <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto">
-        <form @submit.prevent="confirmSale">
-          <!-- Step 1: Select or Add Braid Type -->
-          <div v-if="step === 1" class="mb-6">
-            <label for="productType" class="block text-lg font-medium text-black">Braid Type</label>
+        <form @submit.prevent="sellProduct">
+          <!-- Product Type -->
+          <div class="mb-6">
+            <label for="productType" class="block text-lg font-medium text-black">Product Type</label>
             <select
-              v-model="productType"
+              v-model="selectedProductType"
               id="productType"
               class="w-full mt-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             >
               <option value="" disabled>Select Product Type</option>
-              <option v-for="type in braidTypes" :key="type.value" :value="type.value">
-                {{ type.label }}
+              <option v-for="(subtypes, type) in stock" :key="type" :value="type">
+                {{ type }}
               </option>
             </select>
-    
-            <div class="mt-4">
-              <label for="newBraidType" class="block text-sm font-medium text-gray-700">
-                Can't find the product? Add a new one:
-              </label>
-              <input
-                v-model="newBraidType"
-                id="newBraidType"
-                placeholder="Enter new Product type"
-                class="w-full mt-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-              <button
-                @click.prevent="addBraidType"
-                class="mt-2 px-4 py-2 bg-blue-500 text-white rounded-md shadow hover:bg-blue-600"
-              >
-                Add Product Type
-              </button>
-            </div>
           </div>
-    
-          <!-- Step 2: Enter Braid Subtype -->
-          <div v-if="step === 2" class="mb-6">
-            <label for="productSubtype" class="block text-lg font-medium text-gray-700">Braid Subtype</label>
-            <input
-              v-model="productSubtype"
+  
+          <!-- Product Subtype -->
+          <div class="mb-6" v-if="selectedProductType">
+            <label for="productSubtype" class="block text-lg font-medium text-black">Product Subtype</label>
+            <select
+              v-model="selectedProductSubtype"
               id="productSubtype"
-              type="text"
-              placeholder="Enter Subtype"
               class="w-full mt-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
-            />
+            >
+              <option value="" disabled>Select Product Subtype</option>
+              <option v-for="(quantity, subtype) in stock[selectedProductType]" :key="subtype" :value="subtype">
+                {{ subtype }}
+              </option>
+            </select>
           </div>
-    
-          <!-- Step 3: Quantity -->
-          <div v-if="step === 3" class="mb-6">
-            <label for="quantity" class="block text-lg font-medium text-gray-700">Quantity</label>
+  
+          <!-- Quantity -->
+          <div class="mb-6" v-if="selectedProductSubtype">
+            <label for="quantity" class="block text-lg font-medium text-black">Quantity</label>
             <input
-              v-model="quantity"
+              v-model="quantityToSell"
               id="quantity"
               type="number"
+              :max="stock[selectedProductType][selectedProductSubtype]"
               min="1"
-              required
-              placeholder="Enter Quantity"
+              placeholder="Enter Quantity to Sell"
               class="w-full mt-2 px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500"
             />
+            <p class="text-sm text-gray-500 mt-1">
+              Available Stock: {{ stock[selectedProductType][selectedProductSubtype] }}
+            </p>
           </div>
-    
-          <!-- Step 4: Confirm Sale -->
-          <div v-if="step === 4" class="mb-6">
-            <h2 class="text-lg font-medium text-gray-700">Confirm Sale</h2>
-            <p>Product Type: {{ productType }}</p>
-            <p>Subtype: {{ productSubtype }}</p>
-            <p>Quantity: {{ quantity }}</p>
-          </div>
-    
-          <!-- Navigation buttons -->
-          <div class="flex justify-between mt-6">
-            <button
-              v-if="step > 1"
-              @click.prevent="prevStep"
-              class="w-full sm:w-auto px-4 py-2 bg-orange-400 text-white rounded-md shadow hover:bg-orange-500"
-            >
-              Back
-            </button>
-            <button
-              v-if="step < 4"
-              @click.prevent="nextStep"
-              class="w-full sm:w-auto px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600"
-            >
-              Next
-            </button>
-            <button
-              v-if="step === 4"
-              type="submit"
-              class="w-full sm:w-auto px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600"
-            >
-              Confirm Sale
-            </button>
-          </div>
+  
+          <!-- Submit Button -->
+          <button
+            type="submit"
+            class="w-full px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            :disabled="!selectedProductType || !selectedProductSubtype || quantityToSell <= 0"
+          >
+            Sell Product
+          </button>
         </form>
       </div>
     </div>
   </template>
-    
+  
   <script setup>
-  import { ref } from 'vue';
+  import { reactive, ref, onMounted } from 'vue';
   
-  // Reactive state variables
-  const step = ref(1);
-  const productType = ref('');
-  const productSubtype = ref('');
-  const newBraidType = ref('');
-  const quantity = ref(1);
-  const braidTypes = ref([
-    { value: 'OMBRE BRAIDS LONG', label: 'OMBRE BRAIDS LONG' },
-    { value: 'OMBRE SHORT', label: 'OMBRE SHORT' },
-    { value: 'SPARKLES LONG', label: 'SPARKLES LONG' },
-    { value: 'SPARKLES SHORT', label: 'SPARKLES SHORT' },
-    // other product types
-  ]);
+  // Reactive variables
+  const stock = reactive({});
+  const sales = reactive([]);
+  const selectedProductType = ref('');
+  const selectedProductSubtype = ref('');
+  const quantityToSell = ref(0);
   
-  // Step navigation methods
-  const nextStep = () => {
-    if (step.value === 1 && productType.value) {
-      step.value++;
-    } else if (step.value === 2 && productSubtype.value) {
-      step.value++;
-    } else if (step.value === 3 && quantity.value > 0) {
-      step.value++;
+  // Load stock and sales from local storage
+  const loadFromLocalStorage = () => {
+    const storedStock = localStorage.getItem('stock');
+    const storedSales = localStorage.getItem('sales');
+    if (storedStock) {
+      Object.assign(stock, JSON.parse(storedStock));
+    }
+    if (storedSales) {
+      Object.assign(sales, JSON.parse(storedSales));
     }
   };
   
-  const prevStep = () => {
-    step.value--;
+  // Save stock and sales to local storage
+  const saveToLocalStorage = () => {
+    localStorage.setItem('stock', JSON.stringify(stock));
+    localStorage.setItem('sales', JSON.stringify(sales));
   };
   
-  // Add new braid type to the list
-  const addBraidType = () => {
-    if (newBraidType.value.trim() !== "") {
-      const newType = {
-        value: newBraidType.value.trim().toUpperCase(),
-        label: newBraidType.value.trim().toUpperCase(),
-      };
-      if (!braidTypes.value.some((type) => type.value === newType.value)) {
-        braidTypes.value.push(newType);
-        productType.value = newType.value;
-        newBraidType.value = "";
-      } else {
-        alert("Braid type already exists!");
-      }
+  // Function to sell product
+  const sellProduct = () => {
+    if (
+      !selectedProductType.value ||
+      !selectedProductSubtype.value ||
+      quantityToSell.value <= 0 ||
+      quantityToSell.value > stock[selectedProductType.value][selectedProductSubtype.value]
+    ) {
+      alert('Invalid input. Please check the selected product and quantity.');
+      return;
     }
+  
+    // Deduct the sold quantity from stock
+    stock[selectedProductType.value][selectedProductSubtype.value] -= Number(quantityToSell.value);
+  
+    // Remove subtype if quantity becomes 0
+    if (stock[selectedProductType.value][selectedProductSubtype.value] === 0) {
+      delete stock[selectedProductType.value][selectedProductSubtype.value];
+    }
+  
+    // Remove product type if no subtypes are left
+    if (Object.keys(stock[selectedProductType.value]).length === 0) {
+      delete stock[selectedProductType.value];
+    }
+  
+    // Log the sale
+    sales.push({
+  productType: selectedProductType.value,
+  productSubtype: selectedProductSubtype.value,
+  quantitySold: Number(quantityToSell.value),
+  saleTime: new Date().toLocaleTimeString('en-US', {
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+  }),
+});
+
+  
+    // Save updated stock and sales to local storage
+    saveToLocalStorage();
+  
+    // Reset form fields
+    selectedProductType.value = '';
+    selectedProductSubtype.value = '';
+    quantityToSell.value = 0;
+  
+    alert('Product sold successfully and sale logged!');
   };
   
-  // Confirm Sale and save to localStorage
-  const confirmSale = () => {
-    const sale = {
-      id: Date.now(), // Generate a unique ID using the timestamp
-      productType: productType.value,
-      productSubtype: productSubtype.value,
-      quantitySold: quantity.value,
-      saleDate: new Date().toISOString(), // Add timestamp when the sale is confirmed
-    };
-  
-    // Save the sale to localStorage
-    const storedSales = JSON.parse(localStorage.getItem('sales')) || [];
-    storedSales.push(sale);
-    localStorage.setItem('sales', JSON.stringify(storedSales));
-  
-    console.log("Sale Confirmed:", sale);
-    resetForm();
-  };
-  
-  // Reset form after adding a product
-  const resetForm = () => {
-    productType.value = '';
-    productSubtype.value = '';
-    quantity.value = 1;
-    step.value = 1;
-  };
+  // Load stock and sales from local storage on component mount
+  onMounted(loadFromLocalStorage);
   </script>
+  
+  <style scoped>
+  /* Add custom styles if needed */
+  </style>
   
