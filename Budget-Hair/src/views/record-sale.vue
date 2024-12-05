@@ -1,25 +1,25 @@
 <template>
-  <div class="p-6">
+  <div class="p-6 bg-gray-50 min-h-screen">
     <h1 class="text-sky-500 text-3xl font-semibold text-center mb-6">Sales Records</h1>
 
     <!-- Filters for Daily, Weekly, Monthly -->
     <div class="flex justify-center mb-6">
       <button 
-        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2"
+        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2 transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
         @click="setFilter('daily')" 
         :class="{'bg-blue-500 text-white': filter === 'daily'}">
         Daily
       </button>
 
       <button 
-        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2"
+        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2 transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
         @click="setFilter('weekly')" 
         :class="{'bg-blue-500 text-white': filter === 'weekly'}">
         Weekly
       </button>
 
       <button 
-        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold"
+        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
         @click="setFilter('monthly')" 
         :class="{'bg-blue-500 text-white': filter === 'monthly'}">
         Monthly
@@ -27,29 +27,29 @@
     </div>
 
     <!-- No Records Found Message -->
-    <div v-if="filteredRecords.length === 0" class="text-gray-500 text-center mb-6">
+    <div v-if="filteredRecords.length === 0" class="text-gray-500 text-center mb-6 font-semibold">
       No sales records found for the selected filter.
     </div>
 
     <!-- Records Table -->
-    <div class="overflow-x-auto">
-      <table class="min-w-full bg-white border border-gray-300">
+    <div class="overflow-x-auto bg-white shadow-lg rounded-lg p-4">
+      <table class="min-w-full bg-white border border-gray-300 rounded-lg">
         <thead class="bg-gray-100">
           <tr>
-            <th class="px-4 py-2 text-left">Product Type</th>
-            <th class="px-4 py-2 text-left">Subtype</th>
-            <th class="px-4 py-2 text-left">Quantity</th>
-            <th class="px-4 py-2 text-left">Date</th>
-            <th class="px-4 py-2 text-left">Time</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Subtype</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Time</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(record, index) in filteredRecords" :key="index">
-            <td class="px-4 py-2">{{ record.productType }}</td>
-            <td class="px-4 py-2">{{ record.productSubtype }}</td>
-            <td class="px-4 py-2">{{ record.quantitySold }}</td>
-            <td class="px-4 py-2">{{ record.date }}</td>
-            <td class="px-4 py-2">{{ record.time }}</td>
+          <tr v-for="(record, index) in filteredRecords" :key="index" class="hover:bg-gray-50">
+            <td class="px-6 py-4 text-sm text-gray-600">{{ record.productType }}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ record.productSubtype }}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ record.quantitySold }}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ record.date }}</td>
+            <td class="px-6 py-4 text-sm text-gray-600">{{ record.time }}</td>
           </tr>
         </tbody>
       </table>
@@ -138,6 +138,7 @@ th {
 
 td {
   border-top: 1px solid #e2e8f0;
+  text-transform: capitalize;
 }
 
 button {
@@ -147,5 +148,9 @@ button {
 button:hover {
   background-color: #3b82f6;
   color: white;
+}
+
+tr:hover {
+  background-color: #f1f5f9;
 }
 </style>

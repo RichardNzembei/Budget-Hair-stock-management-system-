@@ -4,6 +4,32 @@
 
     <!-- Dashboard Overview -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    
+      <!-- Sales Overview -->
+      <div class="bg-white p-6 rounded shadow-md">
+        <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">SALES OVERVIEW
+          <span class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm  tracking-wide">today's</span>
+
+        </h2>
+        <ul class="space-y-4">
+          <li
+            v-for="sale in salesItems"
+            :key="sale.id"
+            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4"
+          >
+            <div class=text-sm>
+              <strong class="text-gray-600">{{ sale.productType.toUpperCase() }}</strong>
+              <br />
+              <span class="text-gray-600">{{ sale.productSubtype.toUpperCase() }}:</span>
+              <span class="text-green-500">{{ sale.quantitySold }}</span>
+            </div>
+            <div class="text-gray-400 text-sm flex justify-end">
+              {{ formatSaleTime(sale.saleTime) }}
+            </div>
+          </li>
+        </ul>
+      </div>
+      
       <!-- Stock Overview -->
       <div class="bg-white p-6 rounded-lg shadow-lg">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">STOCK OVERVIEW</h2>
@@ -14,7 +40,7 @@
             class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300"
           >
             <h3 class="font-semibold text-sm text-gray-600 mb-2">{{ productType.toUpperCase() }}</h3>
-            <ul class="space-y-2">
+            <ul class="space-y-2 text-sm">
               <li
                 v-for="(quantity, productSubtype) in subtypes"
                 :key="productSubtype"
@@ -28,27 +54,6 @@
         </ul>
       </div>
 
-      <!-- Sales Overview -->
-      <div class="bg-white p-6 rounded shadow-md">
-        <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">SALES OVERVIEW</h2>
-        <ul class="space-y-4">
-          <li
-            v-for="sale in salesItems"
-            :key="sale.id"
-            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4"
-          >
-            <div>
-              <strong class="text-gray-600">{{ sale.productType.toUpperCase() }}</strong>
-              <br />
-              <span class="text-gray-600">{{ sale.productSubtype.toUpperCase() }}:</span>
-              <span class="text-green-500">{{ sale.quantitySold }}</span>
-            </div>
-            <div class="text-red-400 text-sm flex justify-end">
-              {{ sale.saleTime }}
-            </div>
-          </li>
-        </ul>
-      </div>
     </div>
   </div>
 </template>
@@ -60,6 +65,29 @@ import { ref, onMounted } from 'vue';
 const stock = ref({});
 const salesItems = ref([]);
 
+// Helper function to convert sale time into a full Date object
+const convertToDate = (saleTime) => {
+  const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+  const fullDate = `${currentDate} ${saleTime}`; // Combine current date with sale time
+  const formattedDate = fullDate.replace(/(AM|PM)/, ' $1'); // Ensure that AM/PM format is correctly handled
+  return new Date(formattedDate); // Convert into a Date object
+};
+
+// Helper function to format the sale time as a readable string
+const formatSaleTime = (saleTime) => {
+  const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }; 
+  return saleTime.toLocaleTimeString([], options); // Format the time part only
+};
+
+// Filter sales for today's date
+const filterSalesForToday = (sales) => {
+  const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+  return sales.filter(sale => {
+    const saleDate = sale.saleTime.toISOString().split('T')[0]; // Get sale date in YYYY-MM-DD format
+    return saleDate === today;
+  });
+};
+
 // Load stock and sales data from localStorage
 const loadStockFromLocalStorage = () => {
   const storedStock = localStorage.getItem('stock');
@@ -69,11 +97,15 @@ const loadStockFromLocalStorage = () => {
 
   const storedSales = JSON.parse(localStorage.getItem('sales')) || [];
 
-  // Use stored sale time or fall back to the already saved saleTime during sale creation
-  salesItems.value = storedSales.map(sale => ({
+  // Convert sale times to full Date objects
+  const salesWithDate = storedSales.map(sale => ({
     ...sale,
-    saleTime: sale.saleTime || '',
+    saleTime: convertToDate(sale.saleTime), // Convert the saleTime string to a full Date object
   }));
+
+  // Filter sales for today and sort by latest first
+  salesItems.value = filterSalesForToday(salesWithDate)
+    .sort((a, b) => b.saleTime - a.saleTime); // Sort by timestamp (latest first)
 };
 
 // Initialize data on component mount
@@ -105,7 +137,9 @@ strong,
 span {
   text-transform: uppercase;
 }
-
+.today {
+text-transform: lowercase;
+}
 .text-gray-400 {
   font-size: 0.875rem;
 }
