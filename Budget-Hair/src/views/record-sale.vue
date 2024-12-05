@@ -8,9 +8,6 @@
         class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2"
         @click="setFilter('daily')" 
         :class="{'bg-blue-500 text-white': filter === 'daily'}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path fill-rule="evenodd" d="M4.75 3.5A.75.75 0 015.5 3h9a.75.75 0 01.75.75V4h2.5a.75.75 0 01.75.75v11a.75.75 0 01-.75.75H3a.75.75 0 01-.75-.75V4.75A.75.75 0 013 4h2.5V3.5a.75.75 0 01.75-.75h9a.75.75 0 01.75.75V4h2.5a.75.75 0 01.75.75v11a.75.75 0 01-.75.75H3a.75.75 0 01-.75-.75V4.75A.75.75 0 013 4h2.5V3.5z" clip-rule="evenodd" />
-        </svg>
         Daily
       </button>
 
@@ -18,9 +15,6 @@
         class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2"
         @click="setFilter('weekly')" 
         :class="{'bg-blue-500 text-white': filter === 'weekly'}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path fill-rule="evenodd" d="M15 2H5a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V4a2 2 0 00-2-2zM5 0a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V2a2 2 0 00-2-2H5z" clip-rule="evenodd" />
-        </svg>
         Weekly
       </button>
 
@@ -28,28 +22,34 @@
         class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold"
         @click="setFilter('monthly')" 
         :class="{'bg-blue-500 text-white': filter === 'monthly'}">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-          <path fill-rule="evenodd" d="M5 4V3a1 1 0 112 0v1h6V3a1 1 0 112 0v1h1a2 2 0 012 2v12a2 2 0 01-2 2H3a2 2 0 01-2-2V6a2 2 0 012-2h1z" clip-rule="evenodd" />
-        </svg>
         Monthly
       </button>
     </div>
 
-    <!-- Sales Records Table -->
+    <!-- No Records Found Message -->
+    <div v-if="filteredRecords.length === 0" class="text-gray-500 text-center mb-6">
+      No sales records found for the selected filter.
+    </div>
+
+    <!-- Records Table -->
     <div class="overflow-x-auto">
       <table class="min-w-full bg-white border border-gray-300">
         <thead class="bg-gray-100">
           <tr>
-            <th class="px-4 py-2 text-left">Product</th>
+            <th class="px-4 py-2 text-left">Product Type</th>
+            <th class="px-4 py-2 text-left">Subtype</th>
             <th class="px-4 py-2 text-left">Quantity</th>
-            <th class="px-4 py-2 text-left">Total Sales</th>
+            <th class="px-4 py-2 text-left">Date</th>
+            <th class="px-4 py-2 text-left">Time</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in filteredRecords" :key="product.id">
-            <td class="px-4 py-2">{{ product.name }}</td>
-            <td class="px-4 py-2">{{ product.quantity }}</td>
-            <td class="px-4 py-2">{{ currency(product.totalSales) }}</td>
+          <tr v-for="(record, index) in filteredRecords" :key="index">
+            <td class="px-4 py-2">{{ record.productType }}</td>
+            <td class="px-4 py-2">{{ record.productSubtype }}</td>
+            <td class="px-4 py-2">{{ record.quantitySold }}</td>
+            <td class="px-4 py-2">{{ record.date }}</td>
+            <td class="px-4 py-2">{{ record.time }}</td>
           </tr>
         </tbody>
       </table>
@@ -57,52 +57,69 @@
   </div>
 </template>
 
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 
-// State for filter and product records
+// State for filter and sales records
 const filter = ref('daily');
-const records = ref([]);
+const salesRecords = ref([]); // All sales data
 
-// Load product records from localStorage
+// Load sales data from local storage
 onMounted(() => {
-  const storedProducts = JSON.parse(localStorage.getItem('products')) || [];
-  records.value = storedProducts;
+  const storedSales = JSON.parse(localStorage.getItem('sales')) || [];
+  console.log(storedSales); // Log to inspect the data
+  salesRecords.value = storedSales.map(sale => {
+    const currentDate = new Date(); // Get current date to combine with saleTime
+    const saleTime = sale.saleTime; // e.g., '07:22:52 PM'
+
+    // Construct a full Date object using today's date and the sale time
+    const saleDate = new Date(`${currentDate.toLocaleDateString()} ${saleTime}`);
+
+    // Add formatted date and time fields
+    return {
+      ...sale,
+      saleDate, // Store the full Date object for sorting later
+      date: saleDate.toLocaleDateString(),  // Format the date
+      time: saleDate.toLocaleTimeString(),  // Format the time
+    };
+  });
 });
 
-// Computed property to filter records based on the selected filter type (daily, weekly, monthly)
+// Computed property to filter and sort records based on the selected filter type (daily, weekly, monthly)
 const filteredRecords = computed(() => {
   const now = new Date();
 
-  return records.value.filter((record) => {
-    const recordDate = new Date(record.date);
+  let filtered = salesRecords.value.filter((sale) => {
+    const saleDate = new Date(sale.date);
 
     if (filter.value === 'daily') {
-      return recordDate.toDateString() === now.toDateString();
+      return saleDate.toDateString() === now.toDateString();
     } else if (filter.value === 'weekly') {
-      const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay())); // Get the start of the week
-      return recordDate >= startOfWeek && recordDate <= now;
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Start of the week (Sunday)
+      const endOfWeek = new Date(startOfWeek);
+      endOfWeek.setDate(startOfWeek.getDate() + 6); // End of the week (Saturday)
+      return saleDate >= startOfWeek && saleDate <= endOfWeek;
     } else if (filter.value === 'monthly') {
       return (
-        recordDate.getMonth() === now.getMonth() && recordDate.getFullYear() === now.getFullYear()
+        saleDate.getMonth() === now.getMonth() &&
+        saleDate.getFullYear() === now.getFullYear()
       );
     }
 
-    return true;
+    return true; // Default case: no filter applied
   });
+
+  // Sort records by saleDate in descending order (most recent first)
+  return filtered.sort((a, b) => b.saleDate - a.saleDate);
 });
 
 // Method to set the filter
 const setFilter = (value) => {
   filter.value = value;
 };
-
-// Currency formatting function
-const currency = (value) => {
-  return `$${value.toFixed(2)}`;
-};
 </script>
+
 <style scoped>
 /* Custom styling for the records table */
 table {

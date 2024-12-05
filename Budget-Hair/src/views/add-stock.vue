@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6 text-center text-sky-500">Manage Products</h1>
+    <h1 class="text-3xl font-bold mb-6 text-center text-sky-500">Add Stock</h1>
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto">
       <form @submit.prevent="addStock">
         <!-- Product Type -->
@@ -42,7 +42,7 @@
         <!-- Submit Button -->
         <button
           type="submit"
-          class="w-full px-4 py-2 bg-green-500 text-white rounded-md shadow hover:bg-green-600"
+          class="w-full px-4 py-2 bg-sky-500 text-white rounded-md shadow hover:bg-white hover:text-sky-600"
         >
           Add Stock
         </button>
