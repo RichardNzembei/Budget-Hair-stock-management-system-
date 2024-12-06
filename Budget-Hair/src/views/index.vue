@@ -2,14 +2,16 @@
   <div class="container mx-auto py-8">
     <h1 class="text-md font-bold mb-6 text-center text-sky-500">MAIN DASHBOARD</h1>
 
-    <!-- Dashboard Overview -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    
       <!-- Sales Overview -->
       <div class="bg-white p-6 rounded shadow-md">
-        <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">SALES OVERVIEW
-          <span class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm  tracking-wide">today's</span>
-
+        <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">
+          SALES OVERVIEW
+          <span
+            class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide"
+          >
+            today's
+          </span>
         </h2>
         <ul class="space-y-4">
           <li
@@ -17,7 +19,7 @@
             :key="sale.id"
             class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4"
           >
-            <div class=text-sm>
+            <div class="text-sm">
               <strong class="text-gray-600">{{ sale.productType.toUpperCase() }}</strong>
               <br />
               <span class="text-gray-600">{{ sale.productSubtype.toUpperCase() }}:</span>
@@ -29,7 +31,7 @@
           </li>
         </ul>
       </div>
-      
+
       <!-- Stock Overview -->
       <div class="bg-white p-6 rounded-lg shadow-lg">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">STOCK OVERVIEW</h2>
@@ -53,67 +55,52 @@
           </li>
         </ul>
       </div>
-
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed } from "vue";
+import { useStockStore } from "@/stores/stockStore"; // Import the store
+import { useSalesStore } from "@/stores/salesStore"; // Import sales store
 
-// Reactive references
+const stockStore = useStockStore(); // Pinia store instance for stock
+const salesStore = useSalesStore(); // Pinia store instance for sales
 const stock = ref({});
-const salesItems = ref([]);
 
-// Helper function to convert sale time into a full Date object
-const convertToDate = (saleTime) => {
-  const currentDate = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-  const fullDate = `${currentDate} ${saleTime}`; // Combine current date with sale time
-  const formattedDate = fullDate.replace(/(AM|PM)/, ' $1'); // Ensure that AM/PM format is correctly handled
-  return new Date(formattedDate); // Convert into a Date object
+// Fetch the sales and stock data
+const loadDashboardData = async () => {
+  await stockStore.fetchStock(); // Fetch stock data from the backend
+  await salesStore.fetchSales(); // Fetch sales data from the backend
+  stock.value = stockStore.stock; // Assign the fetched stock data to the local state
 };
 
-// Helper function to format the sale time as a readable string
+// Format saleTime to display only the time (hours and minutes)
 const formatSaleTime = (saleTime) => {
-  const options = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }; 
-  return saleTime.toLocaleTimeString([], options); // Format the time part only
+  const options = { hour: '2-digit', minute: '2-digit', hour12: true };
+  return new Date(saleTime).toLocaleTimeString(undefined, options);
 };
+
 
 // Filter sales for today's date
 const filterSalesForToday = (sales) => {
-  const today = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-  return sales.filter(sale => {
-    const saleDate = sale.saleTime.toISOString().split('T')[0]; // Get sale date in YYYY-MM-DD format
+  const today = new Date().toLocaleDateString();
+  return sales.filter((sale) => {
+    const saleDate = new Date(sale.saleTime).toLocaleDateString();
     return saleDate === today;
   });
 };
 
-// Load stock and sales data from localStorage
-const loadStockFromLocalStorage = () => {
-  const storedStock = localStorage.getItem('stock');
-  if (storedStock) {
-    stock.value = JSON.parse(storedStock);
-  }
+// Computed property to get today's sales from the store
+const salesItems = computed(() => {
+  return filterSalesForToday(salesStore.sales).sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime));
+});
 
-  const storedSales = JSON.parse(localStorage.getItem('sales')) || [];
-
-  // Convert sale times to full Date objects
-  const salesWithDate = storedSales.map(sale => ({
-    ...sale,
-    saleTime: convertToDate(sale.saleTime), // Convert the saleTime string to a full Date object
-  }));
-
-  // Filter sales for today and sort by latest first
-  salesItems.value = filterSalesForToday(salesWithDate)
-    .sort((a, b) => b.saleTime - a.saleTime); // Sort by timestamp (latest first)
-};
-
-// Initialize data on component mount
-onMounted(loadStockFromLocalStorage);
+// Fetch data on component mount
+onMounted(loadDashboardData);
 </script>
 
 <style scoped>
-/* Custom styles to improve the presentation */
 h3 {
   letter-spacing: 0.5px;
 }
@@ -137,9 +124,11 @@ strong,
 span {
   text-transform: uppercase;
 }
+
 .today {
-text-transform: lowercase;
+  text-transform: lowercase;
 }
+
 .text-gray-400 {
   font-size: 0.875rem;
 }
