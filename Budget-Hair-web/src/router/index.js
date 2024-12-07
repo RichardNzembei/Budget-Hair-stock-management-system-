@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import index from '@/views/index.vue'
+
 import recordSale from '@/views/record-sale.vue'
 import soldItem from '@/views/sold-item.vue'
 
@@ -11,6 +12,7 @@ const router = createRouter({
       name: 'index',
       component: index,
     },
+  
     {
       path: '/records',
       name: 'records',
