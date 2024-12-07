@@ -13,7 +13,7 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: [
-      "https://budget-hair-stock-management-system-ddel.vercel.app/", // Vercel production 1
+      "https://budget-hair-stock-management-system-ddel.vercel.app", // Vercel production 1
       "https://budget-hair-stock-management-system.vercel.app",     // Vercel production 2
       "http://localhost:5173",                                      // Local development (Vite)
       "http://localhost:5174"                                       // Local development (other ports, e.g., React)
@@ -28,7 +28,7 @@ app.use(bodyParser.json());
 
 app.use(cors({
   origin: [
-    "https://budget-hair-stock-management-system-mf6o.vercel.app",
+    "https://budget-hair-stock-management-system-ddel.vercel.app",
     "https://budget-hair-stock-management-system.vercel.app",
     "http://localhost:5173",
     "http://localhost:5174"
