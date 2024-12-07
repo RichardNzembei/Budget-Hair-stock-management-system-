@@ -9,19 +9,23 @@ const PORT = process.env.PORT || 5000;
 
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://budget-hair-stock-management-system.vercel.app'
+  'http://localhost:3000',
+  'https://budget-hair-stock-management-system.vercel.app',
 ];
 
 app.use(bodyParser.json());
 
+
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('CORS policy error: Origin not allowed'));
+      callback(new Error(`CORS policy error: Origin ${origin} not allowed`));
     }
-  }
+  },
+  credentials: true,
 }));
 
 app.use('/api', stockRoutes);

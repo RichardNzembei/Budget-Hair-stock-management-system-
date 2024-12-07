@@ -1,6 +1,11 @@
 <template>
-  <Navbar/>
+  <Navbar />
   <div class="mt-20">
-    <NuxtPage/>
+    <NuxtPage />
   </div>
 </template>
+<script setup>
+definePageMeta({
+  title: 'Budget Hair(SMS)',
+});
+</script>
