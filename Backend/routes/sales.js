@@ -18,11 +18,13 @@ router.post('/sales', async (req, res) => {
       return res.status(400).json({ error: 'Insufficient stock' });
     }
 
+    // Update stock
     productData[productSubtype] -= quantitySold;
     if (productData[productSubtype] === 0) delete productData[productSubtype];
     if (Object.keys(productData).length === 0) await stockRef.delete();
     else await stockRef.set(productData, { merge: true });
 
+    // Record sale
     const salesRef = firestore.collection('sales');
     const saleData = {
       productType,
@@ -31,6 +33,10 @@ router.post('/sales', async (req, res) => {
       saleTime: saleTime || new Date().toISOString(),
     };
     const docRef = await salesRef.add(saleData);
+
+    // Emit WebSocket events
+    req.io.emit('sale-updated');
+    req.io.emit('stock-updated');
 
     res.status(201).json({ id: docRef.id, ...saleData });
   } catch (error) {

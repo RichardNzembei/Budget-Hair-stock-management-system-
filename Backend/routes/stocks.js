@@ -1,66 +1,44 @@
 const express = require('express');
 const router = express.Router();
-const firestore = require('../firebaseConfig'); // Firestore setup
+const firestore = require('../firebaseConfig');
 
-// Add or update stock
 router.post('/stock', async (req, res) => {
   const { productType, productSubtype, quantity } = req.body;
 
+  if (!productType || !productSubtype || !quantity) {
+    return res.status(400).json({ error: 'Invalid data' });
+  }
+
   try {
     const stockRef = firestore.collection('stock').doc(productType);
+    const stockDoc = await stockRef.get();
+    const productData = stockDoc.exists ? stockDoc.data() : {};
 
-    await firestore.runTransaction(async (transaction) => {
-      const stockDoc = await transaction.get(stockRef);
+    productData[productSubtype] = (productData[productSubtype] || 0) + quantity;
 
-      const productData = stockDoc.exists ? stockDoc.data() : {};
-      productData[productSubtype] = (productData[productSubtype] || 0) + quantity;
+    await stockRef.set(productData, { merge: true });
 
-      transaction.set(stockRef, productData, { merge: true });
-    });
+    // Emit stock update event
+    req.io.emit('stock-updated'); // Emit the event to notify all connected clients
 
-    res.status(201).json({ message: 'Stock added successfully' });
+    res.status(201).json({ productType, productSubtype, quantity });
   } catch (error) {
-    console.error('Error adding stock:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error updating stock:', error);
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
-// Get all stock
 router.get('/stock', async (req, res) => {
   try {
-    const stockSnapshot = await firestore.collection('stock').get();
-
-    if (stockSnapshot.empty) {
-      return res.status(200).json({});
-    }
-
+    const snapshot = await firestore.collection('stock').get();
     const stock = {};
-    stockSnapshot.forEach((doc) => {
+    snapshot.forEach((doc) => {
       stock[doc.id] = doc.data();
     });
-
     res.status(200).json(stock);
   } catch (error) {
     console.error('Error fetching stock:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// Get stock by product type
-router.get('/stock/:productType', async (req, res) => {
-  const { productType } = req.params;
-
-  try {
-    const stockDoc = await firestore.collection('stock').doc(productType).get();
-
-    if (!stockDoc.exists) {
-      return res.status(404).json({ message: 'Product type not found' });
-    }
-
-    res.status(200).json(stockDoc.data());
-  } catch (error) {
-    console.error(`Error fetching stock for ${productType}:`, error);
-    res.status(500).json({ message: 'Server error' });
+    res.status(500).json({ error: 'Server error' });
   }
 });
 
