@@ -6,13 +6,16 @@ const salesRoutes = require('./routes/sales');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-const allowedOrigins = ['https://budget-hair-stock-management-system.vercel.app'];
+
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://budget-hair-stock-management-system.vercel.app'
+];
 
 app.use(bodyParser.json());
 
 app.use(cors({
-  origin: function(origin, callback) {
-    
+  origin: function (origin, callback) {
     if (!origin || allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
