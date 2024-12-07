@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import axios from "axios";
 
+
 const apiBaseUrl =
   process.env.NODE_ENV === "production"
     ? "https://budget-hair-stock-management-system.onrender.com"
@@ -16,6 +17,7 @@ export const useSalesStore = defineStore("sales", {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/sales`);
         this.sales = response.data;
+        console.log("Fetched sales:", response.data);
       } catch (error) {
         console.error("Error fetching sales:", error.response?.data || error);
       }
@@ -30,8 +32,14 @@ export const useSalesStore = defineStore("sales", {
           saleTime: new Date().toISOString(),
         };
 
-        await axios.post(`${apiBaseUrl}/api/sales`, sale);
-        await this.fetchSales();
+        const response = await axios.post(`${apiBaseUrl}/api/sales`, sale);
+
+        if (response.status === 201) {
+          console.log("Sale added successfully:", response.data);
+          await this.fetchSales();
+        } else {
+          console.error("Failed to add sale:", response.data);
+        }
       } catch (error) {
         console.error("Error adding sale:", error.response?.data || error);
       }

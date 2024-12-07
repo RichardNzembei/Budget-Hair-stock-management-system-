@@ -22,28 +22,19 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
-    async fetchStockByProductType(productType) {
-      if (this.stock[productType]) return; // Avoid duplicate fetches
-
-      try {
-        const response = await axios.get(`${apiBaseUrl}/api/stock/${productType}`);
-        this.stock[productType] = response.data;
-      } catch (error) {
-        console.error(`Error fetching stock for ${productType}:`, error.response?.data || error);
-      }
-    },
-
     async addStockToBackend(productType, productSubtype, quantity) {
       try {
-        const stock = { productType, productSubtype, quantity };
+        const stock = {
+          productType,
+          productSubtype,
+          quantity,
+        };
 
         const response = await axios.post(`${apiBaseUrl}/api/stock`, stock);
 
         if (response.status === 201) {
           console.log('Stock added successfully:', response.data);
-          if (!this.stock[productType]) this.stock[productType] = {};
-          this.stock[productType][productSubtype] =
-            (this.stock[productType][productSubtype] || 0) + quantity;
+          await this.fetchStock();
         } else {
           console.error('Failed to add stock:', response.data);
         }

@@ -3,22 +3,17 @@
     <h1 class="text-md font-bold mb-6 text-center text-sky-500">MAIN DASHBOARD</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <!-- Sales Overview -->
       <div class="bg-white p-6 rounded shadow-md">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">
           SALES OVERVIEW
           <span
-            class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide"
-          >
+            class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide">
             today's
           </span>
         </h2>
         <ul class="space-y-4">
-          <li
-            v-for="sale in salesItems"
-            :key="sale.id"
-            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4"
-          >
+          <li v-for="sale in salesItems" :key="sale.id"
+            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4">
             <div class="text-sm">
               <strong class="text-gray-600">{{ sale.productType.toUpperCase() }}</strong>
               <br />
@@ -32,22 +27,14 @@
         </ul>
       </div>
 
-      <!-- Stock Overview -->
       <div class="bg-white p-6 rounded-lg shadow-lg">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">STOCK OVERVIEW</h2>
         <ul class="space-y-3">
-          <li
-            v-for="(subtypes, productType) in stock"
-            :key="productType"
-            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300"
-          >
+          <li v-for="(subtypes, productType) in stock" :key="productType"
+            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
             <h3 class="font-semibold text-sm text-gray-600 mb-2">{{ productType.toUpperCase() }}</h3>
             <ul class="space-y-2 text-sm">
-              <li
-                v-for="(quantity, productSubtype) in subtypes"
-                :key="productSubtype"
-                class="text-gray-800 space-x-4"
-              >
+              <li v-for="(quantity, productSubtype) in subtypes" :key="productSubtype" class="text-gray-800 space-x-4">
                 <span class="font-medium text-gray-600">{{ productSubtype.toUpperCase() }}:</span>
                 <span class="text-sky-500 font-semibold">{{ quantity }}</span>
               </li>
@@ -60,29 +47,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from "vue";
-import { useStockStore } from "@/stores/stockStore"; // Import the store
-import { useSalesStore } from "@/stores/salesStore"; // Import sales store
+import { ref, onMounted, computed, watch } from "vue";
+import { useStockStore } from "@/stores/stockStore";
+import { useSalesStore } from "@/stores/salesStore";
 
-const stockStore = useStockStore(); // Pinia store instance for stock
-const salesStore = useSalesStore(); // Pinia store instance for sales
+const stockStore = useStockStore();
+const salesStore = useSalesStore();
+
+
 const stock = ref({});
+const salesItems = computed(() => filterSalesForToday(salesStore.sales));
 
-// Fetch the sales and stock data
-const loadDashboardData = async () => {
-  await stockStore.fetchStock(); // Fetch stock data from the backend
-  await salesStore.fetchSales(); // Fetch sales data from the backend
-  stock.value = stockStore.stock; // Assign the fetched stock data to the local state
-};
-
-// Format saleTime to display only the time (hours and minutes)
 const formatSaleTime = (saleTime) => {
   const options = { hour: '2-digit', minute: '2-digit', hour12: true };
   return new Date(saleTime).toLocaleTimeString(undefined, options);
 };
-
-
-// Filter sales for today's date
 const filterSalesForToday = (sales) => {
   const today = new Date().toLocaleDateString();
   return sales.filter((sale) => {
@@ -90,13 +69,19 @@ const filterSalesForToday = (sales) => {
     return saleDate === today;
   });
 };
-
-// Computed property to get today's sales from the store
-const salesItems = computed(() => {
-  return filterSalesForToday(salesStore.sales).sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime));
+const loadDashboardData = async () => {
+  await stockStore.fetchStock();
+  await salesStore.fetchSales();
+  stock.value = stockStore.stock;
+};
+watch(() => stockStore.stock, (newStock) => {
+  stock.value = newStock;
 });
 
-// Fetch data on component mount
+watch(() => salesStore.sales, () => {
+
+});
+
 onMounted(loadDashboardData);
 </script>
 

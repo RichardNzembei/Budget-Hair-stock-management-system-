@@ -1,48 +1,38 @@
 <template>
-    <div class="p-6">
-      <h1 class="text-sky-500 text-3xl font-semibold text-center mb-6">Sales Records</h1>
-  
-      <!-- Filters for Daily, Weekly, Monthly -->
-      <div class="flex justify-center mb-6">
-        <UButton 
-      variant="outline" 
-      size="sm" 
-      @click="setFilter('daily')" 
-      :class="{'bg-blue-500 text-white': filter === 'daily'}">
-      <span class="material-icons mr-2">calendar_today</span>
-      Daily
-    </UButton>
+  <div class="p-6 bg-gray-50 min-h-screen">
+    <h1 class="text-sky-500 text-3xl font-semibold text-center mb-6">Sales Records</h1>
 
-    <UButton 
-      variant="outline" 
-      size="sm" 
-      @click="setFilter('weekly')" 
-      :class="{'bg-blue-500 text-white': filter === 'weekly'}">
-      <span class="material-icons mr-2">calendar_view_week</span>
-      Weekly
-    </UButton>
+    <div class="flex justify-center mb-6">
+      <button
+        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2 transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
+        @click="setFilter('daily')" :class="{ 'bg-blue-500 text-white': filter === 'daily' }">
+        Daily
+      </button>
 
-    <UButton 
-      variant="outline" 
-      size="sm" 
-      @click="setFilter('monthly')" 
-      :class="{'bg-blue-500 text-white': filter === 'monthly'}">
-      <span class="material-icons mr-2">calendar_view_month</span>
-      Monthly
-    </UButton>
-      </div>
-  
-    <!-- No Records Found Message -->
-    <div v-if="filteredRecords.length === 0" class="text-gray-500 text-center mb-6 font-semibold">
+      <button
+        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2 transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
+        @click="setFilter('weekly')" :class="{ 'bg-blue-500 text-white': filter === 'weekly' }">
+        Weekly
+      </button>
+
+      <button
+        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
+        @click="setFilter('monthly')" :class="{ 'bg-blue-500 text-white': filter === 'monthly' }">
+        Monthly
+      </button>
+    </div>
+    <div v-if="loading" class="text-center text-gray-500">Loading sales records...</div>
+
+    <div v-if="filteredRecords.length === 0 && !loading" class="text-gray-500 text-center mb-6 font-semibold">
       No sales records found for the selected filter.
     </div>
 
-    <!-- Records Table -->
-    <div class="overflow-x-auto bg-white shadow-lg rounded-lg p-4">
+    <div v-if="!loading" class="overflow-x-auto bg-white shadow-lg rounded-lg p-4">
       <table class="min-w-full bg-white border border-gray-300 rounded-lg">
         <thead class="bg-gray-100">
           <tr>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type</th>
+            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type
+            </th>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Subtype</th>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
             <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date</th>
@@ -60,78 +50,84 @@
         </tbody>
       </table>
     </div>
-    </div>
-  </template>
+  </div>
+</template>
+
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-
-// State for filter and sales records
+import { useSalesStore } from "@/stores/salesStore";
 const filter = ref('daily');
-const salesRecords = ref([]); // All sales data
+const loading = ref(true);
+const salesStore = useSalesStore();
 
-// Load sales data from local storage
-onMounted(() => {
-  const storedSales = JSON.parse(localStorage.getItem('sales')) || [];
-  console.log(storedSales); // Log to inspect the data
-  salesRecords.value = storedSales.map(sale => {
-    const currentDate = new Date(); // Get current date to combine with saleTime
-    const saleTime = sale.saleTime; // e.g., '07:22:52 PM'
+const loadSalesData = async () => {
+  try {
+    await salesStore.fetchSales();
+  } catch (error) {
+    console.error("Error loading sales data", error);
+  } finally {
+    loading.value = false;
+  }
+};
 
-    // Construct a full Date object using today's date and the sale time
-    const saleDate = new Date(`${currentDate.toLocaleDateString()} ${saleTime}`);
+const convertToDate = (saleTime) => {
+  return new Date(saleTime);
+};
 
-    // Add formatted date and time fields
-    return {
-      ...sale,
-      saleDate, // Store the full Date object for sorting later
-      date: saleDate.toLocaleDateString(),  // Format the date
-      time: saleDate.toLocaleTimeString(),  // Format the time
-    };
-  });
-});
-
-// Computed property to filter and sort records based on the selected filter type (daily, weekly, monthly)
 const filteredRecords = computed(() => {
   const now = new Date();
-
-  let filtered = salesRecords.value.filter((sale) => {
-    const saleDate = new Date(sale.date);
-
-    if (filter.value === 'daily') {
-      return saleDate.toDateString() === now.toDateString();
-    } else if (filter.value === 'weekly') {
-      const startOfWeek = new Date(now);
-      startOfWeek.setDate(now.getDate() - now.getDay()); // Start of the week (Sunday)
-      const endOfWeek = new Date(startOfWeek);
-      endOfWeek.setDate(startOfWeek.getDate() + 6); // End of the week (Saturday)
-      return saleDate >= startOfWeek && saleDate <= endOfWeek;
-    } else if (filter.value === 'monthly') {
-      return (
-        saleDate.getMonth() === now.getMonth() &&
-        saleDate.getFullYear() === now.getFullYear()
-      );
-    }
-
-    return true; // Default case: no filter applied
+  const sales = salesStore.sales.map((sale) => {
+    console.log('Raw saleTime:', sale.saleTime);
+    return {
+      ...sale,
+      saleTime: convertToDate(sale.saleTime),
+    };
   });
 
-  // Sort records by saleDate in descending order (most recent first)
-  return filtered.sort((a, b) => b.saleDate - a.saleDate);
-});
+  console.log(sales);
 
-// Method to set the filter
+  return sales
+    .filter((sale) => {
+      const saleDate = sale.saleTime;
+      console.log('Comparing saleDate:', saleDate, 'to now:', now);
+      if (filter.value === 'daily') {
+        return saleDate.toDateString() === now.toDateString();
+      } else if (filter.value === 'weekly') {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay());
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+        return saleDate >= startOfWeek && saleDate <= endOfWeek;
+      } else if (filter.value === 'monthly') {
+        return (
+          saleDate.getMonth() === now.getMonth() &&
+          saleDate.getFullYear() === now.getFullYear()
+        );
+      }
+      return true;
+    })
+    .map((sale) => ({
+      ...sale,
+      date: sale.saleTime.toLocaleDateString(),
+      time: sale.saleTime.toLocaleTimeString(),
+    }))
+    .sort((a, b) => b.saleTime - a.saleTime);
+});
 const setFilter = (value) => {
   filter.value = value;
 };
+
+onMounted(loadSalesData);
 </script>
+
 <style scoped>
-/* Custom styling for the records table */
 table {
   border-collapse: collapse;
   width: 100%;
 }
 
-th, td {
+th,
+td {
   padding: 12px;
   text-align: left;
 }
@@ -142,7 +138,6 @@ th {
 
 td {
   border-top: 1px solid #e2e8f0;
-  text-transform: capitalize;
 }
 
 button {
@@ -158,4 +153,3 @@ tr:hover {
   background-color: #f1f5f9;
 }
 </style>
-  

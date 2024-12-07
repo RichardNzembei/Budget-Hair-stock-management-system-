@@ -13,7 +13,7 @@
           <span class="text-sm">Sold Item</span>
         </UButton>
         <UButton variant="ghost" size="sm" to="/record-sale" aria-label="Records"
-          class=" text-purple-500 hover:text-red-700 flex flex-col items-center">
+          class=" text-purple-500 hove// Expose the `show` method so it can be called from the parent componentr:text-red-700 flex flex-col items-center">
           <UIcon name="i-heroicons-document-text-solid" size="24" class="mb-1" />
           <span class="text-sm">Records</span>
         </UButton>
