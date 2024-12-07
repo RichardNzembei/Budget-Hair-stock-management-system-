@@ -3,6 +3,7 @@
     <h1 class="text-md font-bold mb-6 text-center text-sky-500">MAIN DASHBOARD</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
       <div class="bg-white p-6 rounded shadow-md">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">
           SALES OVERVIEW
@@ -26,7 +27,6 @@
           </li>
         </ul>
       </div>
-
       <div class="bg-white p-6 rounded-lg shadow-lg">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">STOCK OVERVIEW</h2>
         <ul class="space-y-3">
@@ -47,21 +47,22 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, watch } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useStockStore } from "@/stores/stockStore";
 import { useSalesStore } from "@/stores/salesStore";
-
 const stockStore = useStockStore();
 const salesStore = useSalesStore();
-
-
 const stock = ref({});
-const salesItems = computed(() => filterSalesForToday(salesStore.sales));
-
+const loadDashboardData = async () => {
+  await stockStore.fetchStock();
+  await salesStore.fetchSales();
+  stock.value = stockStore.stock;
+};
 const formatSaleTime = (saleTime) => {
   const options = { hour: '2-digit', minute: '2-digit', hour12: true };
   return new Date(saleTime).toLocaleTimeString(undefined, options);
 };
+
 const filterSalesForToday = (sales) => {
   const today = new Date().toLocaleDateString();
   return sales.filter((sale) => {
@@ -69,19 +70,10 @@ const filterSalesForToday = (sales) => {
     return saleDate === today;
   });
 };
-const loadDashboardData = async () => {
-  await stockStore.fetchStock();
-  await salesStore.fetchSales();
-  stock.value = stockStore.stock;
-};
-watch(() => stockStore.stock, (newStock) => {
-  stock.value = newStock;
+
+const salesItems = computed(() => {
+  return filterSalesForToday(salesStore.sales).sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime));
 });
-
-watch(() => salesStore.sales, () => {
-
-});
-
 onMounted(loadDashboardData);
 </script>
 
