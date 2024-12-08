@@ -3,14 +3,12 @@
     <h1 class="text-3xl font-bold mb-6 text-center text-sky-500">Sell Product</h1>
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto">
 
-      <!-- Loading State -->
-      <div v-if="loadingStock" class="text-center text-lg text-gray-600">
-        Loading stock data...
+      <div v-if="Object.keys(stockStore.stock).length === 0">
+        <p>Loading stock data...</p>
       </div>
 
       <div v-else>
         <form @submit.prevent="sellProduct" aria-label="Sell Product Form">
-          <!-- Product Type -->
           <div class="mb-6">
             <label for="productType" class="block text-lg font-medium text-black">Product Type</label>
             <select v-model="selectedProductType" id="productType"
@@ -22,8 +20,6 @@
               </option>
             </select>
           </div>
-
-          <!-- Product Subtype -->
           <div class="mb-6" v-if="selectedProductType">
             <label for="productSubtype" class="block text-lg font-medium text-black">Product Subtype</label>
             <select v-model="selectedProductSubtype" id="productSubtype"
@@ -36,8 +32,6 @@
               </option>
             </select>
           </div>
-
-          <!-- Quantity -->
           <div class="mb-6" v-if="selectedProductSubtype">
             <label for="quantity" class="block text-lg font-medium text-black">Quantity</label>
             <input v-model.number="quantityToSell" id="quantity" type="number"
@@ -48,11 +42,8 @@
               Available Stock: {{ stockStore.stock[selectedProductType]?.[selectedProductSubtype] }}
             </p>
           </div>
-
-          <!-- Error Message -->
           <p v-if="errorMessage" class="text-red-500 text-sm mt-2">{{ errorMessage }}</p>
 
-          <!-- Submit Button -->
           <button type="submit"
             class="w-full px-4 py-2 bg-red-500 text-white rounded-md shadow hover:bg-red-600 disabled:bg-gray-400 disabled:cursor-not-allowed"
             :disabled="!selectedProductType || !selectedProductSubtype || quantityToSell <= 0 || loading">
@@ -60,14 +51,12 @@
           </button>
         </form>
 
-        <!-- Success Message -->
         <div v-if="showSuccess" class="mt-4 text-green-500 text-center">
           <p>Product sold successfully and sale logged!</p>
         </div>
       </div>
     </div>
 
-    <!-- Popup Notification Component -->
     <PopupNotification ref="popupNotification" />
   </div>
 </template>
@@ -87,22 +76,24 @@ const quantityToSell = ref(0);
 const errorMessage = ref("");
 const loading = ref(false);
 const showSuccess = ref(false);
-const loadingStock = ref(true);
 
 const popupNotification = ref(null);
-
-onMounted(async () => {
+onMounted(() => {
   stockStore.initSocket();
   salesStore.initSocket();
-  await stockStore.fetchStock();
-  loadingStock.value = false;
+  stockStore.socket?.on("stock-updated", () => {
+    console.log("Stock updated in real time");
+  });
+  salesStore.socket?.on("sale-updated", async () => {
+    await salesStore.fetchSales();
+    console.log("Sales updated in real time");
+  });
 });
 
 onUnmounted(() => {
   stockStore.disconnectSocket();
   salesStore.disconnectSocket();
 });
-
 const validateQuantity = () => {
   const maxStock = stockStore.stock[selectedProductType.value]?.[selectedProductSubtype.value];
   if (quantityToSell.value < 1) quantityToSell.value = 1;
@@ -128,9 +119,7 @@ const sellProduct = async () => {
     const productType = selectedProductType.value;
     const productSubtype = selectedProductSubtype.value;
     const quantity = quantityToSell.value;
-
     await salesStore.addSaleToBackend(productType, productSubtype, quantity);
-
     selectedProductType.value = "";
     selectedProductSubtype.value = "";
     quantityToSell.value = 0;
@@ -151,9 +140,3 @@ const sellProduct = async () => {
   }
 };
 </script>
-
-<style scoped>
-input.uppercase {
-  text-transform: uppercase;
-}
-</style>

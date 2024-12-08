@@ -10,19 +10,16 @@ const apiBaseUrl =
 export const useStockStore = defineStore('stock', {
   state: () => ({
     stock: {},
-    socket: null, // Store the WebSocket connection
+    socket: null,
   }),
 
   actions: {
-    // Initialize WebSocket connection
     initSocket() {
       if (!this.socket) {
-        this.socket = io(apiBaseUrl); // Connect to the backend WebSocket server
-
-        // Listen for the 'stock-updated' event
+        this.socket = io(apiBaseUrl);
         this.socket.on('stock-updated', async () => {
           console.log('Stock updated via WebSocket!');
-          await this.fetchStock(); // Re-fetch stock data when the stock is updated
+          await this.fetchStock();
         });
 
         this.socket.on('connect', () => {
@@ -35,7 +32,6 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
-    // Disconnect WebSocket connection
     disconnectSocket() {
       if (this.socket) {
         this.socket.disconnect();
@@ -43,7 +39,6 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
-    // Fetch all stock data
     async fetchStock() {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/stock`);
@@ -53,8 +48,6 @@ export const useStockStore = defineStore('stock', {
         console.error('Error fetching stock:', error.response?.data || error);
       }
     },
-
-    // Add stock to the backend
     async addStockToBackend(productType, productSubtype, quantity) {
       try {
         const stock = { productType, productSubtype, quantity };

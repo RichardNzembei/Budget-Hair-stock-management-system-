@@ -1,7 +1,24 @@
 <script setup>
+import { onMounted, onUnmounted } from 'vue';
 import Navbar from './components/navbar.vue';
-
 import { RouterView } from 'vue-router';
+import { useStockStore } from '@/stores/stockStore';
+import { useSalesStore } from '@/stores/salesStore';
+
+const stockStore = useStockStore();
+const salesStore = useSalesStore();
+
+onMounted(() => {
+  stockStore.fetchStock();
+  salesStore.fetchSales();
+  stockStore.initSocket();
+  salesStore.initSocket();
+});
+
+onUnmounted(() => {
+  stockStore.disconnectSocket();
+  salesStore.disconnectSocket();
+});
 </script>
 
 <template>
@@ -22,3 +39,4 @@ import { RouterView } from 'vue-router';
   }
 }
 </style>
+

@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const firestore = require('../firebaseConfig');
-
 router.post('/sales', async (req, res) => {
   const { productType, productSubtype, quantitySold, saleTime } = req.body;
 
@@ -12,19 +11,41 @@ router.post('/sales', async (req, res) => {
   try {
     const stockRef = firestore.collection('stock').doc(productType);
     const stockDoc = await stockRef.get();
-    const productData = stockDoc.exists ? stockDoc.data() : {};
 
+    if (!stockDoc.exists) {
+      return res.status(404).json({ error: 'Product type not found' });
+    }
+
+    const productData = stockDoc.data();
+    console.log("Fetched stock data:", productData);
+
+    // Check if stock exists for the subtype and has enough quantity
     if (!productData[productSubtype] || productData[productSubtype] < quantitySold) {
       return res.status(400).json({ error: 'Insufficient stock' });
     }
 
-    // Update stock
+    // Update the stock for the subtype
     productData[productSubtype] -= quantitySold;
-    if (productData[productSubtype] === 0) delete productData[productSubtype];
-    if (Object.keys(productData).length === 0) await stockRef.delete();
-    else await stockRef.set(productData, { merge: true });
+    console.log(`Updated stock for ${productSubtype}:`, productData[productSubtype]);
 
-    // Record sale
+    // If the stock for the subtype is zero, remove it
+    if (productData[productSubtype] <= 0) {
+      console.log(`Removing subtype ${productSubtype} from stock.`);
+      delete productData[productSubtype];
+    }
+
+    // Check if no subtypes are left and delete the product type document
+    if (Object.keys(productData).length === 0) {
+      console.log(`No subtypes left, deleting document for ${productType}`);
+      await stockRef.delete();  // Delete the entire document
+      console.log(`Document for ${productType} deleted from Firestore.`);
+    } else {
+      console.log(`Updating Firestore document for ${productType}:`, productData);
+      await stockRef.set(productData);  // Full update without merge
+      console.log(`Firestore document for ${productType} updated.`);
+    }
+
+    // Record the sale
     const salesRef = firestore.collection('sales');
     const saleData = {
       productType,
@@ -33,6 +54,7 @@ router.post('/sales', async (req, res) => {
       saleTime: saleTime || new Date().toISOString(),
     };
     const docRef = await salesRef.add(saleData);
+    console.log("Sale recorded:", saleData);
 
     // Emit WebSocket events
     req.io.emit('sale-updated');
@@ -45,6 +67,8 @@ router.post('/sales', async (req, res) => {
   }
 });
 
+
+// Route to fetch all sales records
 router.get('/sales', async (req, res) => {
   try {
     const snapshot = await firestore.collection('sales').get();
@@ -52,7 +76,7 @@ router.get('/sales', async (req, res) => {
     res.status(200).json(sales);
   } catch (error) {
     console.error('Error fetching sales:', error);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error during sales fetching' });
   }
 });
 

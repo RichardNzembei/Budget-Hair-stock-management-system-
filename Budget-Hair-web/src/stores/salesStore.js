@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
-import { io } from 'socket.io-client'; // Import the Socket.IO client
+import { io } from 'socket.io-client';
 
 const apiBaseUrl =
   process.env.NODE_ENV === 'production'
@@ -10,22 +10,22 @@ const apiBaseUrl =
 export const useSalesStore = defineStore('sales', {
   state: () => ({
     sales: [],
-    socket: null, // Store the WebSocket connection
+    socket: null,
   }),
 
   actions: {
-    // Initialize WebSocket connection
+
     initSocket() {
       if (!this.socket) {
-        this.socket = io(apiBaseUrl); // Connect to the backend WebSocket server
+        this.socket = io(apiBaseUrl);
 
-        // Listen for the 'sale-updated' event
+
         this.socket.on('sale-updated', () => {
           console.log('Sale data updated!');
-          this.fetchSales(); // Re-fetch sales data when a sale is updated
+          this.fetchSales();
         });
 
-        // Handle socket errors
+
         this.socket.on('connect_error', (err) => {
           console.error('Socket connection error:', err);
         });
@@ -36,7 +36,7 @@ export const useSalesStore = defineStore('sales', {
       }
     },
 
-    // Disconnect WebSocket connection (to avoid memory leaks)
+
     disconnectSocket() {
       if (this.socket) {
         this.socket.disconnect();
@@ -45,7 +45,7 @@ export const useSalesStore = defineStore('sales', {
       }
     },
 
-    // Fetch all sales data
+
     async fetchSales() {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/sales`);
@@ -56,7 +56,7 @@ export const useSalesStore = defineStore('sales', {
       }
     },
 
-    // Add a sale to the backend and re-fetch sales data
+
     async addSaleToBackend(productType, productSubtype, quantitySold) {
       try {
         const sale = {
@@ -77,6 +77,6 @@ export const useSalesStore = defineStore('sales', {
     },
   },
 
-  // To ensure WebSocket is connected as soon as the store is used
-  persist: true, // Optional: to persist socket connection state if necessary
+
+  persist: true,
 });

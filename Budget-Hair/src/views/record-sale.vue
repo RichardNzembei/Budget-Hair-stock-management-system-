@@ -11,23 +11,22 @@
 
       <button
         class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2 transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
-        @click="setFilter('weekly')" :class="{ 'bg-blue-500 text-white': filter === 'weekly' }">
-        Weekly
+        @click="setFilter('monthly')" :class="{ 'bg-blue-500 text-white': filter === 'monthly' }">
+        Monthly
       </button>
 
       <button
         class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
-        @click="setFilter('monthly')" :class="{ 'bg-blue-500 text-white': filter === 'monthly' }">
-        Monthly
+        @click="setFilter('allTime')" :class="{ 'bg-blue-500 text-white': filter === 'allTime' }">
+        All Time
       </button>
     </div>
-    <div v-if="loading" class="text-center text-gray-500">Loading sales records...</div>
 
-    <div v-if="filteredRecords.length === 0 && !loading" class="text-gray-500 text-center mb-6 font-semibold">
+    <div v-if="filteredRecords.length === 0" class="text-gray-500 text-center mb-6 font-semibold">
       No sales records found for the selected filter.
     </div>
 
-    <div v-if="!loading" class="overflow-x-auto bg-white shadow-lg rounded-lg p-4">
+    <div class="overflow-x-auto bg-white shadow-lg rounded-lg p-4" v-if="filteredRecords.length > 0">
       <table class="min-w-full bg-white border border-gray-300 rounded-lg">
         <thead class="bg-gray-100">
           <tr>
@@ -52,57 +51,39 @@
     </div>
   </div>
 </template>
-
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useSalesStore } from "@/stores/salesStore";
 const filter = ref('daily');
-const loading = ref(true);
 const salesStore = useSalesStore();
-
-const loadSalesData = async () => {
-  try {
-    await salesStore.fetchSales();
-  } catch (error) {
-    console.error("Error loading sales data", error);
-  } finally {
-    loading.value = false;
-  }
+const setFilter = (value) => {
+  filter.value = value;
 };
-
-const convertToDate = (saleTime) => {
-  return new Date(saleTime);
-};
-
 const filteredRecords = computed(() => {
+  if (!salesStore.sales || salesStore.sales.length === 0) {
+    return [];
+  }
+
   const now = new Date();
   const sales = salesStore.sales.map((sale) => {
-    console.log('Raw saleTime:', sale.saleTime);
     return {
       ...sale,
-      saleTime: convertToDate(sale.saleTime),
+      saleTime: new Date(sale.saleTime),
     };
   });
-
-  console.log(sales);
 
   return sales
     .filter((sale) => {
       const saleDate = sale.saleTime;
-      console.log('Comparing saleDate:', saleDate, 'to now:', now);
       if (filter.value === 'daily') {
         return saleDate.toDateString() === now.toDateString();
-      } else if (filter.value === 'weekly') {
-        const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay());
-        const endOfWeek = new Date(startOfWeek);
-        endOfWeek.setDate(startOfWeek.getDate() + 6);
-        return saleDate >= startOfWeek && saleDate <= endOfWeek;
       } else if (filter.value === 'monthly') {
         return (
           saleDate.getMonth() === now.getMonth() &&
           saleDate.getFullYear() === now.getFullYear()
         );
+      } else if (filter.value === 'allTime') {
+        return true;
       }
       return true;
     })
@@ -110,16 +91,15 @@ const filteredRecords = computed(() => {
       ...sale,
       date: sale.saleTime.toLocaleDateString(),
       time: sale.saleTime.toLocaleTimeString(),
+      isSameDay: sale.saleTime.toDateString() === now.toDateString(),
     }))
     .sort((a, b) => b.saleTime - a.saleTime);
 });
-const setFilter = (value) => {
-  filter.value = value;
-};
-
-onMounted(loadSalesData);
+onMounted(() => {
+  salesStore.fetchSales();
+  salesStore.initSocket();
+});
 </script>
-
 <style scoped>
 table {
   border-collapse: collapse;
@@ -138,6 +118,10 @@ th {
 
 td {
   border-top: 1px solid #e2e8f0;
+}
+
+tr.same-day {
+  background-color: #f0f9ff;
 }
 
 button {

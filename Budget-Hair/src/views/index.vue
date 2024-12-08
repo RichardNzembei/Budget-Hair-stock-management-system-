@@ -3,7 +3,7 @@
     <h1 class="text-md font-bold mb-6 text-center text-sky-500">MAIN DASHBOARD</h1>
 
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
+      <!-- SALES OVERVIEW -->
       <div class="bg-white p-6 rounded shadow-md">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">
           SALES OVERVIEW
@@ -12,7 +12,13 @@
             today's
           </span>
         </h2>
-        <ul class="space-y-4">
+
+        <!-- Message if no sales for today -->
+        <div v-if="salesItems.length === 0" class="text-center text-gray-500">
+          No sales for today.
+        </div>
+
+        <ul v-else class="space-y-4">
           <li v-for="sale in salesItems" :key="sale.id"
             class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4">
             <div class="text-sm">
@@ -28,9 +34,16 @@
         </ul>
       </div>
 
+      <!-- STOCK OVERVIEW -->
       <div class="bg-white p-6 rounded-lg shadow-lg">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">STOCK OVERVIEW</h2>
-        <ul class="space-y-3">
+
+        <!-- Message if no stock data -->
+        <div v-if="Object.keys(stock).length === 0" class="text-center text-gray-500">
+          No stock data available.
+        </div>
+
+        <ul v-else class="space-y-3">
           <li v-for="(subtypes, productType) in stock" :key="productType"
             class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
             <h3 class="font-semibold text-sm text-gray-600 mb-2">{{ productType.toUpperCase() }}</h3>
@@ -56,23 +69,38 @@ const stockStore = useStockStore();
 const salesStore = useSalesStore();
 
 const stock = ref({});
-const salesItems = computed(() =>
-  salesStore.sales.sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime))
-);
+const salesItems = computed(() => {
+  const today = new Date().setHours(0, 0, 0, 0);
+  return salesStore.sales
+    .filter((sale) => {
+      const saleDate = new Date(sale.saleTime).setHours(0, 0, 0, 0);
+      return saleDate === today;
+    })
+    .sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime));
+});
 
-const loadDashboardData = async () => {
-  await stockStore.fetchStock();
-  await salesStore.fetchSales();
-  stock.value = { ...stockStore.stock };
-};
 
 const formatSaleTime = (saleTime) => {
   const options = { hour: "2-digit", minute: "2-digit", hour12: true };
   return new Date(saleTime).toLocaleTimeString(undefined, options);
 };
+const loadDashboardData = async () => {
+  if (Object.keys(stockStore.stock).length === 0) {
+    await stockStore.fetchStock();
+  }
+
+  if (salesStore.sales.length === 0) {
+    await salesStore.fetchSales();
+  }
+
+  stock.value = { ...stockStore.stock };
+};
+
 
 const initializeSocket = () => {
   stockStore.initSocket();
+  salesStore.initSocket();
+
   const socket = stockStore.socket;
 
   socket.on("sale-updated", async () => {
@@ -89,6 +117,7 @@ const initializeSocket = () => {
 
 const disconnectSocket = () => {
   stockStore.disconnectSocket();
+  salesStore.disconnectSocket();
 };
 
 onMounted(() => {
@@ -100,7 +129,6 @@ onUnmounted(() => {
   disconnectSocket();
 });
 </script>
-
 
 
 <style scoped>

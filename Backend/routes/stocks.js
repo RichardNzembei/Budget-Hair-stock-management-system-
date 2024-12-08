@@ -2,10 +2,11 @@ const express = require('express');
 const router = express.Router();
 const firestore = require('../firebaseConfig');
 
+// Route to update stock
 router.post('/stock', async (req, res) => {
   const { productType, productSubtype, quantity } = req.body;
 
-  if (!productType || !productSubtype || !quantity) {
+  if (!productType || !productSubtype || typeof quantity !== 'number') {
     return res.status(400).json({ error: 'Invalid data' });
   }
 
@@ -19,15 +20,16 @@ router.post('/stock', async (req, res) => {
     await stockRef.set(productData, { merge: true });
 
     // Emit stock update event
-    req.io.emit('stock-updated'); // Emit the event to notify all connected clients
+    req.io.emit('stock-updated', { productType, productSubtype, newStock: productData[productSubtype] });
 
-    res.status(201).json({ productType, productSubtype, quantity });
+    res.status(201).json({ message: 'Stock updated successfully', productType, productSubtype, quantity });
   } catch (error) {
     console.error('Error updating stock:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
 
+// Route to fetch current stock
 router.get('/stock', async (req, res) => {
   try {
     const snapshot = await firestore.collection('stock').get();
