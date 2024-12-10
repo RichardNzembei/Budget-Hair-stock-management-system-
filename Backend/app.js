@@ -36,7 +36,7 @@ app.use(cors({
     "http://localhost:5173",
     "http://localhost:5174"
   ],
-  methods: ["GET", "POST"], // Allowed HTTP methods
+  methods: ['GET', 'POST', 'DELETE', 'PUT'] // Allowed HTTP methods
 }));
 
 // Attach `Socket.IO` instance to all incoming requests

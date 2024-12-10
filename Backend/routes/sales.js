@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const firestore = require('../firebaseConfig');
+
 router.post('/sales', async (req, res) => {
   const { productType, productSubtype, quantitySold, saleTime } = req.body;
 
@@ -17,32 +18,22 @@ router.post('/sales', async (req, res) => {
     }
 
     const productData = stockDoc.data();
-    console.log("Fetched stock data:", productData);
 
-    // Check if stock exists for the subtype and has enough quantity
+    // Check stock availability
     if (!productData[productSubtype] || productData[productSubtype] < quantitySold) {
       return res.status(400).json({ error: 'Insufficient stock' });
     }
 
-    // Update the stock for the subtype
+    // Update stock
     productData[productSubtype] -= quantitySold;
-    console.log(`Updated stock for ${productSubtype}:`, productData[productSubtype]);
-
-    // If the stock for the subtype is zero, remove it
     if (productData[productSubtype] <= 0) {
-      console.log(`Removing subtype ${productSubtype} from stock.`);
       delete productData[productSubtype];
     }
 
-    // Check if no subtypes are left and delete the product type document
     if (Object.keys(productData).length === 0) {
-      console.log(`No subtypes left, deleting document for ${productType}`);
-      await stockRef.delete();  // Delete the entire document
-      console.log(`Document for ${productType} deleted from Firestore.`);
+      await stockRef.delete();
     } else {
-      console.log(`Updating Firestore document for ${productType}:`, productData);
-      await stockRef.set(productData);  // Full update without merge
-      console.log(`Firestore document for ${productType} updated.`);
+      await stockRef.set(productData);
     }
 
     // Record the sale
@@ -54,9 +45,7 @@ router.post('/sales', async (req, res) => {
       saleTime: saleTime || new Date().toISOString(),
     };
     const docRef = await salesRef.add(saleData);
-    console.log("Sale recorded:", saleData);
 
-    // Emit WebSocket events
     req.io.emit('sale-updated');
     req.io.emit('stock-updated');
 
@@ -67,8 +56,6 @@ router.post('/sales', async (req, res) => {
   }
 });
 
-
-// Route to fetch all sales records
 router.get('/sales', async (req, res) => {
   try {
     const snapshot = await firestore.collection('sales').get();
@@ -77,6 +64,60 @@ router.get('/sales', async (req, res) => {
   } catch (error) {
     console.error('Error fetching sales:', error);
     res.status(500).json({ error: 'Server error during sales fetching' });
+  }
+});
+
+router.delete('/sales/:id', async (req, res) => {
+  const saleId = req.params.id;
+
+  try {
+    // Fetch the sale document from Firestore
+    const saleDoc = await firestore.collection('sales').doc(saleId).get();
+    if (!saleDoc.exists) {
+      return res.status(404).json({ error: 'Sale not found' });
+    }
+
+    const saleData = saleDoc.data();
+
+    // Fetch or initialize stock data for the product type
+    const stockRef = firestore.collection('stock').doc(saleData.productType);
+    const stockDoc = await stockRef.get();
+
+    let productData = {};
+    if (stockDoc.exists) {
+      productData = stockDoc.data();
+    }
+
+    // Restore or add the stock for the product subtype
+    if (productData[saleData.productSubtype]) {
+      productData[saleData.productSubtype] += saleData.quantitySold;
+    } else {
+      productData[saleData.productSubtype] = saleData.quantitySold; // Add new subtype
+    }
+
+    // Update the stock data in Firestore
+    await stockRef.set(productData);
+
+    // Delete the sale document from Firestore
+    await firestore.collection('sales').doc(saleId).delete();
+
+// Emit WebSocket events to notify the frontend
+req.io.emit('sale-updated'); // Notify sale updates
+req.io.emit('stock-updated', {
+  productType: saleData.productType,
+  isNewProduct: !stockDoc.exists, // Check if this is a new product type
+});
+
+console.log('Emitting stock-updated event:', {
+  productType: saleData.productType,
+  isNewProduct: !stockDoc.exists,
+});
+
+
+    res.status(200).json({ message: 'Sale deleted and stock restored' });
+  } catch (error) {
+    console.error('Error deleting sale:', error);
+    res.status(500).json({ error: 'Error deleting sale and restoring stock' });
   }
 });
 
