@@ -17,11 +17,14 @@ export const useStockStore = defineStore('stock', {
     initSocket() {
       if (!this.socket) {
         this.socket = io(apiBaseUrl);
-        this.socket.on('stock-updated', async () => {
-          console.log('Stock updated via WebSocket!');
-          await this.fetchStock();
-        });
 
+        this.socket.on('stock-updated', (payload) => {
+          console.log('Stock updated event received:', payload);
+        
+          const stockStore = useStockStore(); 
+          stockStore.fetchStock(); 
+        });
+        
         this.socket.on('connect', () => {
           console.log('Connected to WebSocket server');
         });
@@ -43,11 +46,12 @@ export const useStockStore = defineStore('stock', {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/stock`);
         this.stock = response.data;
-        console.log('Fetched stock:', response.data);
+        console.log('Fetched stock:', this.stock);
       } catch (error) {
         console.error('Error fetching stock:', error.response?.data || error);
       }
     },
+
     async addStockToBackend(productType, productSubtype, quantity) {
       try {
         const stock = { productType, productSubtype, quantity };
