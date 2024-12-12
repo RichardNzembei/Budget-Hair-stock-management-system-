@@ -24,6 +24,6 @@ self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
   event.notification.close();
   event.waitUntil(
-    clients.openWindow('http://localhost:5173/') // Replace with the relevant page to open
+    clients.openWindow('https://budget-hair-stock-management-system.vercel.app/') // Replace with your Vercel URL
   );
 });
