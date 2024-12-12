@@ -1,3 +1,4 @@
+// app.js
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
@@ -5,6 +6,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const stockRoutes = require('./routes/stocks'); // Stock management routes
 const salesRoutes = require('./routes/sales'); // Sales management routes
+const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 const server = http.createServer(app);
@@ -48,6 +50,7 @@ app.use((req, res, next) => {
 // Register routes
 app.use('/api', stockRoutes); // Stock routes
 app.use('/api', salesRoutes); // Sales routes
+app.use('/api/notifications', notificationRoutes); // Notification routes
 
 // Handle WebSocket connections
 io.on('connection', (socket) => {

@@ -1,7 +1,9 @@
+// routes/sales.js
 const express = require('express');
 const router = express.Router();
 const firestore = require('../firebaseConfig');
 
+// Route to add a new sale
 router.post('/sales', async (req, res) => {
   const { productType, productSubtype, quantitySold, saleTime } = req.body;
 
@@ -56,6 +58,7 @@ router.post('/sales', async (req, res) => {
   }
 });
 
+// Route to fetch all sales
 router.get('/sales', async (req, res) => {
   try {
     const snapshot = await firestore.collection('sales').get();
@@ -67,11 +70,11 @@ router.get('/sales', async (req, res) => {
   }
 });
 
+// Route to delete a sale and restore stock
 router.delete('/sales/:id', async (req, res) => {
   const saleId = req.params.id;
 
   try {
-    // Fetch the sale document from Firestore
     const saleDoc = await firestore.collection('sales').doc(saleId).get();
     if (!saleDoc.exists) {
       return res.status(404).json({ error: 'Sale not found' });
@@ -79,40 +82,26 @@ router.delete('/sales/:id', async (req, res) => {
 
     const saleData = saleDoc.data();
 
-    // Fetch or initialize stock data for the product type
     const stockRef = firestore.collection('stock').doc(saleData.productType);
     const stockDoc = await stockRef.get();
 
-    let productData = {};
-    if (stockDoc.exists) {
-      productData = stockDoc.data();
-    }
+    let productData = stockDoc.exists ? stockDoc.data() : {};
 
-    // Restore or add the stock for the product subtype
     if (productData[saleData.productSubtype]) {
       productData[saleData.productSubtype] += saleData.quantitySold;
     } else {
-      productData[saleData.productSubtype] = saleData.quantitySold; // Add new subtype
+      productData[saleData.productSubtype] = saleData.quantitySold;
     }
 
-    // Update the stock data in Firestore
     await stockRef.set(productData);
 
-    // Delete the sale document from Firestore
     await firestore.collection('sales').doc(saleId).delete();
 
-// Emit WebSocket events to notify the frontend
-req.io.emit('sale-updated'); // Notify sale updates
-req.io.emit('stock-updated', {
-  productType: saleData.productType,
-  isNewProduct: !stockDoc.exists, // Check if this is a new product type
-});
-
-console.log('Emitting stock-updated event:', {
-  productType: saleData.productType,
-  isNewProduct: !stockDoc.exists,
-});
-
+    req.io.emit('sale-updated');
+    req.io.emit('stock-updated', {
+      productType: saleData.productType,
+      isNewProduct: !stockDoc.exists,
+    });
 
     res.status(200).json({ message: 'Sale deleted and stock restored' });
   } catch (error) {
