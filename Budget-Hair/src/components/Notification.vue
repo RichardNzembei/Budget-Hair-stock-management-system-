@@ -15,7 +15,7 @@ export default {
   data() {
     return {
       isSubscribed: false,
-      hasSubscribedBefore: false,  // Flag to track if the user has subscribed before
+      hasSubscribedBefore: false,
     };
   },
   computed: {
@@ -25,29 +25,23 @@ export default {
   },
   methods: {
     async subscribe() {
-      // Perform subscription logic
       await this.notificationStore.subscribeUser();
       this.isSubscribed = !!this.notificationStore.subscription;
 
-      // Store subscription status in localStorage
       if (this.isSubscribed) {
         localStorage.setItem('isSubscribed', 'true');
       }
     },
     async unsubscribe() {
-      // Perform unsubscribe logic
       await this.notificationStore.unsubscribeUser();
       this.isSubscribed = false;
-
-      // Remove subscription status from localStorage
       localStorage.removeItem('isSubscribed');
     },
   },
   mounted() {
-    // Check if the user has previously subscribed using localStorage
     const subscriptionStatus = localStorage.getItem('isSubscribed');
-    this.hasSubscribedBefore = subscriptionStatus === 'true';  // Set to true if the user subscribed before
-    this.isSubscribed = this.hasSubscribedBefore;  // Update subscription status
+    this.hasSubscribedBefore = subscriptionStatus === 'true';
+    this.isSubscribed = this.hasSubscribedBefore;
   },
 };
 </script>

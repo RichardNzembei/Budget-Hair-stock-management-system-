@@ -15,17 +15,17 @@ const router = createRouter({
     {
       path: '/add-stock',
       name: 'add-stock',
-      component:addStock
+      component: addStock
     },
     {
       path: '/records',
       name: 'records',
-      component:recordSale
+      component: recordSale
     },
     {
       path: '/sold-item',
       name: 'sold-item',
-      component:soldItem
+      component: soldItem
     },
   ],
 })

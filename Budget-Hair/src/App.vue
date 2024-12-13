@@ -5,14 +5,14 @@ import Notification from './components/Notification.vue';
 import { RouterView } from 'vue-router';
 import { useStockStore } from '@/stores/stockStore';
 import { useSalesStore } from '@/stores/salesStore';
-import { useNotificationStore } from '@/stores/notification'; // Import Notification Store
+import { useNotificationStore } from '@/stores/notification';
 
 // Create store instances
 const stockStore = useStockStore();
 const salesStore = useSalesStore();
-const notificationStore = useNotificationStore(); // Create notification store instance
+const notificationStore = useNotificationStore();
 
-const isSubscribed = ref(false); // Track subscription status
+const isSubscribed = ref(false);
 
 onMounted(() => {
   // Initialize stores
@@ -42,7 +42,7 @@ onUnmounted(() => {
 
 <template>
   <Navbar />
-  <Notification/>
+  <Notification />
   <div class="mt-20">
     <RouterView />
   </div>

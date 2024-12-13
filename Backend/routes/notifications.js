@@ -1,6 +1,6 @@
 const express = require('express');
 const webPush = require('web-push');
-const firestore = require('../firebaseConfig'); // Adjust to match your Firebase configuration
+const firestore = require('../firebaseConfig');
 const router = express.Router();
 
 const vapidKeys = {
