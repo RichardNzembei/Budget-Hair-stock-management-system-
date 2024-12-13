@@ -1,7 +1,32 @@
-// routes/sales.js
 const express = require('express');
-const router = express.Router();
+const webPush = require('web-push');
 const firestore = require('../firebaseConfig');
+const router = express.Router();
+
+// VAPID keys for Web Push notifications
+const vapidKeys = {
+  publicKey: 'BE5ilGf0inEseYpOWIFo4sLo593HXBq0Wa8evNkHE9Kf5XnF0Kagb4xzbY1jCrG-SF4DqvF1XDspjzRfZG5ioKY',
+  privateKey: '8tl48rW3k3kI9OQLuSjEf9_nFv7qf6xSxrIPzc_uXDA',
+};
+
+webPush.setVapidDetails('mailto:richardsonreuben78@gmail.com', vapidKeys.publicKey, vapidKeys.privateKey);
+
+// Send notification function
+const sendNotification = async (notificationPayload) => {
+  try {
+    const subscriptionsSnapshot = await firestore.collection('subscriptions').get();
+    const subscriptions = subscriptionsSnapshot.docs.map(doc => doc.data());
+
+    await Promise.all(
+      subscriptions.map(subscription =>
+        webPush.sendNotification(subscription, JSON.stringify(notificationPayload))
+      )
+    );
+    console.log('Notifications sent successfully');
+  } catch (error) {
+    console.error('Error sending notifications:', error);
+  }
+};
 
 // Route to add a new sale
 router.post('/sales', async (req, res) => {
@@ -50,6 +75,13 @@ router.post('/sales', async (req, res) => {
 
     req.io.emit('sale-updated');
     req.io.emit('stock-updated');
+
+    // Send notification on sale update
+    const notificationPayload = {
+      title: 'Sale Updated',
+      body: `A sale of ${quantitySold} ${productSubtype} was made.`,
+    };
+    await sendNotification(notificationPayload);
 
     res.status(201).json({ id: docRef.id, ...saleData });
   } catch (error) {
@@ -102,6 +134,13 @@ router.delete('/sales/:id', async (req, res) => {
       productType: saleData.productType,
       isNewProduct: !stockDoc.exists,
     });
+
+    // Send notification for deleted sale
+    const notificationPayload = {
+      title: 'Sale Deleted',
+      body: `A sale of ${saleData.quantitySold} ${saleData.productSubtype} was removed.`,
+    };
+    await sendNotification(notificationPayload);
 
     res.status(200).json({ message: 'Sale deleted and stock restored' });
   } catch (error) {
