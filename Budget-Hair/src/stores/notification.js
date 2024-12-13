@@ -81,7 +81,7 @@ export const useNotificationStore = defineStore('notification', {
     
         // Send subscription to the backend
         console.log('Sending subscription to backend...');
-        await axios.post(`${apiBaseUrl}/notifications/subscribe`, subscription);
+        await axios.post(`${apiBaseUrl}/subscribe`, subscription);
         console.log('Subscription successfully sent to backend.');
       } catch (error) {
         console.error('Error subscribing to notifications:', error);
@@ -106,7 +106,7 @@ export const useNotificationStore = defineStore('notification', {
         await this.subscription.unsubscribe();
         console.log('User unsubscribed from notifications.');
 
-        await axios.post(`${apiBaseUrl}/notifications/unsubscribe`, this.subscription);
+        await axios.post(`${apiBaseUrl}/unsubscribe`, this.subscription);
         console.log('Unsubscription data sent to backend.');
 
         this.subscription = null;

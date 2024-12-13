@@ -44,7 +44,7 @@ app.use((req, res, next) => {
 
 app.use('/api', stockRoutes);
 app.use('/api', salesRoutes);
-app.use('/api/notifications', notificationRoutes);
+app.use('/api', notificationRoutes);
 
 io.on('connection', (socket) => {
   console.log('WebSocket client connected');
