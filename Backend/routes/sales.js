@@ -138,7 +138,7 @@ router.delete('/sales/:id', async (req, res) => {
     // Send notification for deleted sale
     const notificationPayload = {
       title: 'Sale Deleted',
-      body: `A sale of ${saleData.quantitySold} ${saleData.productSubtype} of ${productType} was restored to stock.`,
+      body: `A sale of ${saleData.quantitySold} ${saleData.productSubtype} of ${saleData.productType} was restored to stock.`,
     };
     await sendNotification(notificationPayload);
 
