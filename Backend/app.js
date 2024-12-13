@@ -13,7 +13,7 @@ const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
     origin: [
-      "https://budget-hair-stock-management-system-ddel.vercel.app",
+      "https://budget-hair-stock-management-system-wui7.vercel.app",
       "https://budget-hair-stock-management-system.vercel.app",
       "http://localhost:5173",
       "http://localhost:5174",
@@ -28,7 +28,7 @@ app.use(bodyParser.json());
 app.use(
   cors({
     origin: [
-      "https://budget-hair-stock-management-system-ddel.vercel.app",
+      "https://budget-hair-stock-management-system-wui7.vercel.app",
       "https://budget-hair-stock-management-system.vercel.app",
       "http://localhost:5173",
       "http://localhost:5174",
