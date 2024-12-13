@@ -1,11 +1,6 @@
 <template>
-  <div class="notification-container">
-    <div v-if="isSubscribed">
-      <h3>You are subscribed to notifications!</h3>
-      <p>Stay updated with real-time notifications.</p>
-      <button @click="unsubscribe">Unsubscribe</button>
-    </div>
-    <div v-else>
+  <div v-if="!isSubscribed && !hasSubscribedBefore" class="notification-container">
+    <div>
       <h3>Notifications Disabled</h3>
       <p>Click the button below to enable notifications.</p>
       <button @click="subscribe">Enable Notifications</button>
@@ -20,6 +15,7 @@ export default {
   data() {
     return {
       isSubscribed: false,
+      hasSubscribedBefore: false,  // Flag to track if the user has subscribed before
     };
   },
   computed: {
@@ -29,16 +25,29 @@ export default {
   },
   methods: {
     async subscribe() {
+      // Perform subscription logic
       await this.notificationStore.subscribeUser();
       this.isSubscribed = !!this.notificationStore.subscription;
+
+      // Store subscription status in localStorage
+      if (this.isSubscribed) {
+        localStorage.setItem('isSubscribed', 'true');
+      }
     },
     async unsubscribe() {
+      // Perform unsubscribe logic
       await this.notificationStore.unsubscribeUser();
       this.isSubscribed = false;
+
+      // Remove subscription status from localStorage
+      localStorage.removeItem('isSubscribed');
     },
   },
   mounted() {
-    this.isSubscribed = !!this.notificationStore.subscription;
+    // Check if the user has previously subscribed using localStorage
+    const subscriptionStatus = localStorage.getItem('isSubscribed');
+    this.hasSubscribedBefore = subscriptionStatus === 'true';  // Set to true if the user subscribed before
+    this.isSubscribed = this.hasSubscribedBefore;  // Update subscription status
   },
 };
 </script>

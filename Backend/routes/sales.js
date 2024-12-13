@@ -79,7 +79,7 @@ router.post('/sales', async (req, res) => {
     // Send notification on sale update
     const notificationPayload = {
       title: 'Sale Updated',
-      body: `A sale of ${quantitySold} ${productSubtype} was made.`,
+      body: `A sale of ${quantitySold} ${productSubtype} of ${productType} was made.`,
     };
     await sendNotification(notificationPayload);
 
@@ -138,7 +138,7 @@ router.delete('/sales/:id', async (req, res) => {
     // Send notification for deleted sale
     const notificationPayload = {
       title: 'Sale Deleted',
-      body: `A sale of ${saleData.quantitySold} ${saleData.productSubtype} was removed.`,
+      body: `A sale of ${saleData.quantitySold} ${saleData.productSubtype} of ${productType} was restored to stock.`,
     };
     await sendNotification(notificationPayload);
 
