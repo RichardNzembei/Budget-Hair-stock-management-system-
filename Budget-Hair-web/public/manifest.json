@@ -1,6 +1,6 @@
 {
     "name": "Budget Hair",
-    "short_name": "BudHair",
+    "short_name": "BudHair(w)",
     "description": "A stock management system",
     "start_url": "/",
     "display": "standalone",
