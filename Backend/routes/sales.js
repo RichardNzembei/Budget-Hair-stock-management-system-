@@ -15,10 +15,10 @@ webPush.setVapidDetails('mailto:richardsonreuben78@gmail.com', vapidKeys.publicK
 const sendNotification = async (notificationPayload) => {
   try {
     const subscriptionsSnapshot = await firestore.collection('subscriptions').get();
-    const subscriptions = subscriptionsSnapshot.docs.map(doc => doc.data());
+    const subscriptions = subscriptionsSnapshot.docs.map((doc) => doc.data());
 
     await Promise.all(
-      subscriptions.map(subscription =>
+      subscriptions.map((subscription) =>
         webPush.sendNotification(subscription, JSON.stringify(notificationPayload))
       )
     );
@@ -53,15 +53,11 @@ router.post('/sales', async (req, res) => {
 
     // Update stock
     productData[productSubtype] -= quantitySold;
-    if (productData[productSubtype] <= 0) {
-      delete productData[productSubtype];
+    if (productData[productSubtype] < 0) {
+      productData[productSubtype] = 0;
     }
 
-    if (Object.keys(productData).length === 0) {
-      await stockRef.delete();
-    } else {
-      await stockRef.set(productData);
-    }
+    await stockRef.set(productData);
 
     // Record the sale
     const salesRef = firestore.collection('sales');

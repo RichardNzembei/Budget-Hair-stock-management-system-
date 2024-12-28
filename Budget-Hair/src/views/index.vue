@@ -44,17 +44,20 @@
         </div>
 
         <ul v-else class="space-y-3">
-          <li v-for="(subtypes, productType) in stock" :key="productType"
-            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
-            <h3 class="font-semibold text-sm text-gray-600 mb-2">{{ productType.toUpperCase() }}</h3>
-            <ul class="space-y-2 text-sm">
-              <li v-for="(quantity, productSubtype) in subtypes" :key="productSubtype" class="text-gray-800 space-x-4">
-                <span class="font-medium text-gray-600">{{ productSubtype.toUpperCase() }}:</span>
-                <span class="text-sky-500 font-semibold">{{ quantity }}</span>
-              </li>
-            </ul>
-          </li>
-        </ul>
+  <li v-for="(subtypes, productType) in stock" :key="productType"
+      class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
+    <h3 class="font-semibold text-sm text-gray-600 mb-2">{{ productType.toUpperCase() }}</h3>
+    <ul class="space-y-2 text-sm">
+      <li v-for="(quantity, productSubtype) in subtypes" :key="productSubtype" class="text-gray-800 space-x-4">
+        <span class="font-medium text-gray-600">{{ productSubtype.toUpperCase() }}:</span>
+        <span v-if="quantity === 0" class="text-red-500 font-semibold">Out of Stock</span>
+        <span v-else-if="quantity < 5" class="text-green-500 font-light"><span class="text-sky-700">{{ quantity }}</span>  (Restock)* </span>
+        <span v-else class="text-sky-500 font-semibold">{{ quantity }}</span>
+      </li>
+    </ul>
+  </li>
+</ul>
+
       </div>
     </div>
   </div>

@@ -15,6 +15,7 @@ const io = socketIo(server, {
     origin: [
       "https://budget-hair-stock-management-system-wui7.vercel.app",
       "https://budget-hair-stock-management-system.vercel.app",
+      "https://budget-hair-stock-management-system-ll2i.vercel.app/",
       "http://localhost:5173",
       "http://localhost:5174",
     ],
@@ -30,6 +31,7 @@ app.use(
     origin: [
       "https://budget-hair-stock-management-system-wui7.vercel.app",
       "https://budget-hair-stock-management-system.vercel.app",
+      "https://budget-hair-stock-management-system-ll2i.vercel.app/",
       "http://localhost:5173",
       "http://localhost:5174",
     ],
