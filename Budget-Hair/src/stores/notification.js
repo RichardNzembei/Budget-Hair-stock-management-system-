@@ -59,30 +59,38 @@ export const useNotificationStore = defineStore('notification', {
           alert('Notifications or Service Workers are not supported in your browser.');
           return;
         }
-
+    
         console.log('Requesting notification permission...');
         const permission = await Notification.requestPermission();
         console.log('Notification permission:', permission);
-
+    
         if (permission !== 'granted') {
           alert('Notification permission denied.');
           console.log('Notification permission denied.');
           return;
         }
-
+    
         console.log('Registering service worker...');
         const registration = await navigator.serviceWorker.register('/service-worker.js');
         console.log('Service worker registered with scope:', registration.scope);
-
+    
+        // Check if there's an existing subscription
+        const existingSubscription = await registration.pushManager.getSubscription();
+        if (existingSubscription) {
+          console.log('Existing subscription found. Unsubscribing...');
+          await existingSubscription.unsubscribe();
+          console.log('Existing subscription unsubscribed.');
+        }
+    
         console.log('Subscribing user to push notifications...');
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: this.urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
         });
         console.log('Push subscription created:', subscription);
-
+    
         this.subscription = subscription;
-
+    
         // Send subscription to the backend
         console.log('Sending subscription to backend...');
         const response = await axios.post(`${apiBaseUrl}/api/subscribe`, subscription);
@@ -97,6 +105,7 @@ export const useNotificationStore = defineStore('notification', {
         }
       }
     },
+    
 
     // Unsubscribe the user from notifications
     async unsubscribeUser() {
