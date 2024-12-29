@@ -1,4 +1,4 @@
-const PUBLIC_VAPID_KEY = 'BLXNZaVwiz5mh3WI_Zqf-e77TvVs80zxJX0KL8MZEB2KRcAvPANCekrwj8vbGrNT6nMGmwu1zxbBOdMd8S6kaGM';
+const PUBLIC_VAPID_KEY = 'BE5ilGf0inEseYpOWIFo4sLo593HXBq0Wa8evNkHE9Kf5XnF0Kagb4xzbY1jCrG-SF4DqvF1XDspjzRfZG5ioKY';
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -35,10 +35,6 @@ export const useNotificationStore = defineStore('notification', {
         this.socket.on('disconnect', () => {
           console.log('Disconnected from WebSocket server.');
         });
-
-        this.socket.on('error', (error) => {
-          console.error('WebSocket error:', error);
-        });
       }
     },
 
@@ -52,40 +48,49 @@ export const useNotificationStore = defineStore('notification', {
       }
     },
 
-    // Subscribe user to push notifications
     async subscribeUser() {
       try {
-        console.log('Starting subscription process...');
-        
-        // Check notification support
-        if (!('Notification' in window)) {
-          throw new Error('Notifications are not supported in this browser.');
-        }
-    
-        const permission = await Notification.requestPermission();
-        if (permission !== 'granted') {
-          alert('Notification permissions are required to receive push notifications.');
+        console.log('Checking notification and service worker support...');
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
+          alert('Notifications or Service Workers are not supported in your browser.');
           return;
         }
-    
-        const registration = await navigator.serviceWorker.getRegistration('/service-worker.js');
-        if (!registration) {
-          console.log('Registering Service Worker...');
-          await navigator.serviceWorker.register('/service-worker.js');
+
+        console.log('Requesting notification permission...');
+        const permission = await Notification.requestPermission();
+        console.log('Notification permission:', permission);
+
+        if (permission !== 'granted') {
+          alert('Notification permission denied.');
+          console.log('Notification permission denied.');
+          return;
         }
-    
+
+        console.log('Registering service worker...');
+        const registration = await navigator.serviceWorker.register('/service-worker.js');
+        console.log('Service worker registered with scope:', registration.scope);
+
+        console.log('Subscribing user to push notifications...');
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: this.urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
         });
-    
-        console.log('Subscription created:', subscription);
-    
+        console.log('Push subscription created:', subscription);
+
+        this.subscription = subscription;
+
+        // Send subscription to the backend
+        console.log('Sending subscription to backend...');
         await axios.post(`${apiBaseUrl}/api/subscribe`, subscription);
-        console.log('Subscription sent to backend.');
-    
+        console.log('Subscription successfully sent to backend.');
       } catch (error) {
-        console.error('Error during subscription:', error);
+        console.error('Error subscribing to notifications:', error);
+        if (error.name === 'AbortError') {
+          console.error('The push service registration was aborted.');
+        }
+        if (error.message) {
+          console.error('Error message:', error.message);
+        }
       }
     },
 

@@ -1,4 +1,4 @@
-const PUBLIC_VAPID_KEY = 'BLXNZaVwiz5mh3WI_Zqf-e77TvVs80zxJX0KL8MZEB2KRcAvPANCekrwj8vbGrNT6nMGmwu1zxbBOdMd8S6kaGM';
+const PUBLIC_VAPID_KEY = 'BE5ilGf0inEseYpOWIFo4sLo593HXBq0Wa8evNkHE9Kf5XnF0Kagb4xzbY1jCrG-SF4DqvF1XDspjzRfZG5ioKY';
 
 // Event listener for push notifications
 self.addEventListener('push', (event) => {
@@ -15,9 +15,7 @@ self.addEventListener('push', (event) => {
   console.log('Notification data:', { title, options });
 
   event.waitUntil(
-    self.registration.showNotification(title, options).catch((error) => {
-      console.error('Error displaying notification:', error);
-    })
+    self.registration.showNotification(title, options)
   );
 });
 
@@ -25,18 +23,7 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
   event.notification.close();
-
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then((clientList) => {
-      const client = clientList.find((client) => client.url === 'https://budget-hair-stock-management-system-ll2i.vercel.app/');
-      
-      if (client) {
-        client.focus();
-      } else {
-        clients.openWindow('https://budget-hair-stock-management-system-ll2i.vercel.app/');
-      }
-    }).catch((error) => {
-      console.error('Error handling notification click:', error);
-    })
+    clients.openWindow('https://budget-hair-stock-management-system.vercel.app/') // Replace with your Vercel URL
   );
 });
