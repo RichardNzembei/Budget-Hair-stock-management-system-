@@ -52,6 +52,7 @@ export default {
     },
   },
   mounted() {
+    // Check if the user has subscribed previously from localStorage
     const subscriptionStatus = localStorage.getItem('isSubscribed');
     this.hasSubscribedBefore = subscriptionStatus === 'true';
     this.isSubscribed = this.hasSubscribedBefore;

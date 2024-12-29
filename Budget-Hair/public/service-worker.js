@@ -28,7 +28,7 @@ self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
   event.notification.close();
 
-  const url = 'https://budget-hair-stock-management-system.vercel.app/'; // Replace with your Vercel URL
+  const url = 'https://budget-hair-stock-management-system-ll2i.vercel.app/'; // Replace with your Vercel URL
   console.log(`Opening window: ${url}`);
 
   event.waitUntil(
