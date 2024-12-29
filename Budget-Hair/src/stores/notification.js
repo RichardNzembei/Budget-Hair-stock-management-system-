@@ -47,52 +47,38 @@ export const useNotificationStore = defineStore('notification', {
         console.log('Socket disconnected.');
       }
     },
-
     async subscribeUser() {
       try {
-        console.log('Checking notification and service worker support...');
-        if (!('Notification' in window) || !('serviceWorker' in navigator)) {
-          alert('Notifications or Service Workers are not supported in your browser.');
-          return;
+        console.log('Starting subscription process...');
+        
+        // Check notification support
+        if (!('Notification' in window)) {
+          throw new Error('Notifications are not supported in this browser.');
         }
-
-        console.log('Requesting notification permission...');
+    
         const permission = await Notification.requestPermission();
-        console.log('Notification permission:', permission);
-
         if (permission !== 'granted') {
-          alert('Notification permission denied.');
-          console.log('Notification permission denied.');
-          return;
+          throw new Error('Notification permissions denied by the user.');
         }
-
-        console.log('Registering service worker...');
+    
         const registration = await navigator.serviceWorker.register('/service-worker.js');
-        console.log('Service worker registered with scope:', registration.scope);
-
-        console.log('Subscribing user to push notifications...');
+        console.log('Service Worker registered successfully:', registration);
+    
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: this.urlBase64ToUint8Array(PUBLIC_VAPID_KEY),
         });
-        console.log('Push subscription created:', subscription);
-
-        this.subscription = subscription;
-
-        // Send subscription to the backend
-        console.log('Sending subscription to backend...');
+    
+        console.log('Subscription created:', subscription);
+    
         await axios.post(`${apiBaseUrl}/api/subscribe`, subscription);
-        console.log('Subscription successfully sent to backend.');
+        console.log('Subscription sent to backend.');
+    
       } catch (error) {
-        console.error('Error subscribing to notifications:', error);
-        if (error.name === 'AbortError') {
-          console.error('The push service registration was aborted.');
-        }
-        if (error.message) {
-          console.error('Error message:', error.message);
-        }
+        console.error('Error during subscription:', error);
       }
     },
+    
 
     // Unsubscribe the user from notifications
     async unsubscribeUser() {
