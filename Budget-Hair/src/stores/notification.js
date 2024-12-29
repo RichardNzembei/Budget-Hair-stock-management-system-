@@ -35,6 +35,10 @@ export const useNotificationStore = defineStore('notification', {
         this.socket.on('disconnect', () => {
           console.log('Disconnected from WebSocket server.');
         });
+
+        this.socket.on('error', (error) => {
+          console.error('WebSocket error:', error);
+        });
       }
     },
 
@@ -47,6 +51,8 @@ export const useNotificationStore = defineStore('notification', {
         console.log('Socket disconnected.');
       }
     },
+
+    // Subscribe user to push notifications
     async subscribeUser() {
       try {
         console.log('Starting subscription process...');
@@ -58,11 +64,15 @@ export const useNotificationStore = defineStore('notification', {
     
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') {
-          throw new Error('Notification permissions denied by the user.');
+          alert('Notification permissions are required to receive push notifications.');
+          return;
         }
     
-        const registration = await navigator.serviceWorker.register('/service-worker.js');
-        console.log('Service Worker registered successfully:', registration);
+        const registration = await navigator.serviceWorker.getRegistration('/service-worker.js');
+        if (!registration) {
+          console.log('Registering Service Worker...');
+          await navigator.serviceWorker.register('/service-worker.js');
+        }
     
         const subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
@@ -78,7 +88,6 @@ export const useNotificationStore = defineStore('notification', {
         console.error('Error during subscription:', error);
       }
     },
-    
 
     // Unsubscribe the user from notifications
     async unsubscribeUser() {
