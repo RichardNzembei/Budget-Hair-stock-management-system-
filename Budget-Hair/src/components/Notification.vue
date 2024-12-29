@@ -6,6 +6,13 @@
       <button @click="subscribe">Enable Notifications</button>
     </div>
   </div>
+  <div v-if="isSubscribed" class="notification-container">
+    <div>
+      <h3>Notifications Enabled</h3>
+      <p>You will now receive notifications.</p>
+      <button @click="unsubscribe">Disable Notifications</button>
+    </div>
+  </div>
 </template>
 
 <script>
@@ -25,23 +32,31 @@ export default {
   },
   methods: {
     async subscribe() {
+      console.log('Attempting to subscribe for notifications...');
       await this.notificationStore.subscribeUser();
       this.isSubscribed = !!this.notificationStore.subscription;
 
       if (this.isSubscribed) {
+        console.log('Subscription successful.');
         localStorage.setItem('isSubscribed', 'true');
+      } else {
+        console.log('Subscription failed.');
       }
     },
     async unsubscribe() {
+      console.log('Attempting to unsubscribe from notifications...');
       await this.notificationStore.unsubscribeUser();
       this.isSubscribed = false;
       localStorage.removeItem('isSubscribed');
+      console.log('User unsubscribed from notifications.');
     },
   },
   mounted() {
     const subscriptionStatus = localStorage.getItem('isSubscribed');
     this.hasSubscribedBefore = subscriptionStatus === 'true';
     this.isSubscribed = this.hasSubscribedBefore;
+
+    console.log(`Subscription status on mount: ${this.isSubscribed ? 'Subscribed' : 'Not Subscribed'}`);
   },
 };
 </script>

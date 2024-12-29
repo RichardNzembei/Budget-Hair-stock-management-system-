@@ -4,8 +4,8 @@ const firestore = require('../firebaseConfig');
 const router = express.Router();
 
 const vapidKeys = {
-  publicKey: 'BE5ilGf0inEseYpOWIFo4sLo593HXBq0Wa8evNkHE9Kf5XnF0Kagb4xzbY1jCrG-SF4DqvF1XDspjzRfZG5ioKY',
-  privateKey: '8tl48rW3k3kI9OQLuSjEf9_nFv7qf6xSxrIPzc_uXDA',
+  publicKey: 'BLXNZaVwiz5mh3WI_Zqf-e77TvVs80zxJX0KL8MZEB2KRcAvPANCekrwj8vbGrNT6nMGmwu1zxbBOdMd8S6kaGM',
+  privateKey: 'IQtpY0qIYG999VvQXcPAcmK7PnIYbwBJYY5I3If-MJA',
 };
 
 // Set VAPID details
@@ -15,6 +15,7 @@ router.post('/subscribe', async (req, res) => {
   const subscription = req.body;
 
   try {
+    console.log('Received subscription:', subscription);
     const subscriptionRef = firestore.collection('subscriptions');
     await subscriptionRef.add(subscription);
     console.log('New subscription saved:', subscription);
@@ -32,8 +33,17 @@ router.post('/send', async (req, res) => {
   };
 
   try {
+    console.log('Sending notification with payload:', notificationPayload);
     const subscriptionsSnapshot = await firestore.collection('subscriptions').get();
+    console.log('Fetched subscriptions:', subscriptionsSnapshot.size);
+
+    if (subscriptionsSnapshot.empty) {
+      console.log('No subscriptions found.');
+      return res.status(404).json({ message: 'No subscriptions found' });
+    }
+
     const subscriptions = subscriptionsSnapshot.docs.map((doc) => doc.data());
+    console.log('Sending notifications to subscriptions:', subscriptions);
 
     await Promise.all(
       subscriptions.map((subscription) =>

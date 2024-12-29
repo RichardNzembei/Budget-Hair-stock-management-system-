@@ -1,4 +1,4 @@
-const PUBLIC_VAPID_KEY = 'BE5ilGf0inEseYpOWIFo4sLo593HXBq0Wa8evNkHE9Kf5XnF0Kagb4xzbY1jCrG-SF4DqvF1XDspjzRfZG5ioKY';
+const PUBLIC_VAPID_KEY = 'BLXNZaVwiz5mh3WI_Zqf-e77TvVs80zxJX0KL8MZEB2KRcAvPANCekrwj8vbGrNT6nMGmwu1zxbBOdMd8S6kaGM';
 
 // Event listener for push notifications
 self.addEventListener('push', (event) => {
@@ -15,7 +15,11 @@ self.addEventListener('push', (event) => {
   console.log('Notification data:', { title, options });
 
   event.waitUntil(
-    self.registration.showNotification(title, options)
+    self.registration.showNotification(title, options).then(() => {
+      console.log('Notification displayed:', { title, options });
+    }).catch((err) => {
+      console.error('Error displaying notification:', err);
+    })
   );
 });
 
@@ -23,7 +27,19 @@ self.addEventListener('push', (event) => {
 self.addEventListener('notificationclick', (event) => {
   console.log('Notification clicked:', event);
   event.notification.close();
+
+  const url = 'https://budget-hair-stock-management-system.vercel.app/'; // Replace with your Vercel URL
+  console.log(`Opening window: ${url}`);
+
   event.waitUntil(
-    clients.openWindow('https://budget-hair-stock-management-system.vercel.app/') // Replace with your Vercel URL
+    clients.openWindow(url).then((windowClient) => {
+      if (windowClient) {
+        console.log('Window opened successfully:', windowClient);
+      } else {
+        console.log('No window client found, opening a new one...');
+      }
+    }).catch((err) => {
+      console.error('Error opening window:', err);
+    })
   );
 });

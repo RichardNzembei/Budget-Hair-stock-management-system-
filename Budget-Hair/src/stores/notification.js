@@ -1,4 +1,4 @@
-const PUBLIC_VAPID_KEY = 'BE5ilGf0inEseYpOWIFo4sLo593HXBq0Wa8evNkHE9Kf5XnF0Kagb4xzbY1jCrG-SF4DqvF1XDspjzRfZG5ioKY';
+const PUBLIC_VAPID_KEY = 'BLXNZaVwiz5mh3WI_Zqf-e77TvVs80zxJX0KL8MZEB2KRcAvPANCekrwj8vbGrNT6nMGmwu1zxbBOdMd8S6kaGM';
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import { io } from 'socket.io-client';
@@ -35,6 +35,8 @@ export const useNotificationStore = defineStore('notification', {
         this.socket.on('disconnect', () => {
           console.log('Disconnected from WebSocket server.');
         });
+      } else {
+        console.log('WebSocket connection already initialized.');
       }
     },
 
@@ -45,6 +47,8 @@ export const useNotificationStore = defineStore('notification', {
         this.socket.disconnect();
         this.socket = null;
         console.log('Socket disconnected.');
+      } else {
+        console.log('No WebSocket connection to disconnect.');
       }
     },
 
@@ -81,8 +85,8 @@ export const useNotificationStore = defineStore('notification', {
 
         // Send subscription to the backend
         console.log('Sending subscription to backend...');
-        await axios.post(`${apiBaseUrl}/api/subscribe`, subscription);
-        console.log('Subscription successfully sent to backend.');
+        const response = await axios.post(`${apiBaseUrl}/api/subscribe`, subscription);
+        console.log('Subscription successfully sent to backend:', response.data);
       } catch (error) {
         console.error('Error subscribing to notifications:', error);
         if (error.name === 'AbortError') {
@@ -106,8 +110,8 @@ export const useNotificationStore = defineStore('notification', {
         await this.subscription.unsubscribe();
         console.log('User unsubscribed from notifications.');
 
-        await axios.post(`${apiBaseUrl}/api/unsubscribe`, this.subscription);
-        console.log('Unsubscription data sent to backend.');
+        const response = await axios.post(`${apiBaseUrl}/api/unsubscribe`, this.subscription);
+        console.log('Unsubscription data sent to backend:', response.data);
 
         this.subscription = null;
         console.log('User unsubscribed successfully.');
@@ -126,7 +130,7 @@ export const useNotificationStore = defineStore('notification', {
       for (let i = 0; i < rawData.length; ++i) {
         outputArray[i] = rawData.charCodeAt(i);
       }
-      console.log('VAPID key converted:', outputArray);
+      console.log('VAPID key converted to Uint8Array:', outputArray);
       return outputArray;
     },
   },
