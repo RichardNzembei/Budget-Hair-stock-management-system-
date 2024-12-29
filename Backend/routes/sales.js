@@ -3,10 +3,10 @@ const webPush = require('web-push');
 const firestore = require('../firebaseConfig');
 const router = express.Router();
 
-// VAPID keys for Web Push notifications
+// VAPID keys for Web Push notifications (secured using environment variables)
 const vapidKeys = {
-  publicKey: 'BE5ilGf0inEseYpOWIFo4sLo593HXBq0Wa8evNkHE9Kf5XnF0Kagb4xzbY1jCrG-SF4DqvF1XDspjzRfZG5ioKY',
-  privateKey: '8tl48rW3k3kI9OQLuSjEf9_nFv7qf6xSxrIPzc_uXDA',
+  publicKey: process.env.VAPID_PUBLIC_KEY,
+  privateKey: process.env.VAPID_PRIVATE_KEY,
 };
 
 webPush.setVapidDetails('mailto:richardsonreuben78@gmail.com', vapidKeys.publicKey, vapidKeys.privateKey);
@@ -76,6 +76,10 @@ router.post('/sales', async (req, res) => {
     const notificationPayload = {
       title: 'Sale Updated',
       body: `A sale of ${quantitySold} ${productSubtype} of ${productType} was made.`,
+      icon: '/path/to/icon.png', // Optional: path to notification icon
+      actions: [
+        { action: 'view', title: 'View Details' },
+      ],
     };
     await sendNotification(notificationPayload);
 
@@ -135,6 +139,10 @@ router.delete('/sales/:id', async (req, res) => {
     const notificationPayload = {
       title: 'Sale Deleted',
       body: `A sale of ${saleData.quantitySold} ${saleData.productSubtype} of ${saleData.productType} was restored to stock.`,
+      icon: '/path/to/icon.png', // Optional: path to notification icon
+      actions: [
+        { action: 'view', title: 'View Details' },
+      ],
     };
     await sendNotification(notificationPayload);
 
