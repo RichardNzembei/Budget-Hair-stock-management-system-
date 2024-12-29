@@ -5,8 +5,8 @@ const router = express.Router();
 
 // VAPID keys for Web Push notifications (secured using environment variables)
 const vapidKeys = {
-  publicKey: process.env.VAPID_PUBLIC_KEY,
-  privateKey: process.env.VAPID_PRIVATE_KEY,
+  publicKey: 'BE5ilGf0inEseYpOWIFo4sLo593HXBq0Wa8evNkHE9Kf5XnF0Kagb4xzbY1jCrG-SF4DqvF1XDspjzRfZG5ioKY',
+  privateKey: '8tl48rW3k3kI9OQLuSjEf9_nFv7qf6xSxrIPzc_uXDA',
 };
 
 webPush.setVapidDetails('mailto:richardsonreuben78@gmail.com', vapidKeys.publicKey, vapidKeys.privateKey);
