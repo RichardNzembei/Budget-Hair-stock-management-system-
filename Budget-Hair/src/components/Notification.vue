@@ -6,13 +6,6 @@
       <button @click="subscribe">Enable Notifications</button>
     </div>
   </div>
-  <div v-if="isSubscribed" class="notification-container">
-    <div>
-      <h3>Notifications Enabled</h3>
-      <p>You will now receive notifications.</p>
-      <button @click="unsubscribe">Disable Notifications</button>
-    </div>
-  </div>
 </template>
 
 <script>
@@ -42,13 +35,6 @@ export default {
       } else {
         console.log('Subscription failed.');
       }
-    },
-    async unsubscribe() {
-      console.log('Attempting to unsubscribe from notifications...');
-      await this.notificationStore.unsubscribeUser();
-      this.isSubscribed = false;
-      localStorage.removeItem('isSubscribed');
-      console.log('User unsubscribed from notifications.');
     },
   },
   mounted() {
