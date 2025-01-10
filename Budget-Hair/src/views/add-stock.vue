@@ -34,7 +34,6 @@
     <PopupNotification ref="popupNotification" />
   </div>
 </template>
-
 <script setup>
 import { ref } from 'vue';
 import { useStockStore } from '../stores/stockStore';
@@ -46,6 +45,13 @@ const productSubtype = ref('');
 const quantity = ref(1);
 const loading = ref(false);
 const popupNotification = ref(null);
+const sanitizeInput = (str) => {
+  return str
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toUpperCase();
+};
+
 const validateStockInput = (productType, productSubtype, quantity) => {
   if (!productType || !productSubtype || quantity <= 0) {
     return 'Please provide valid inputs.';
@@ -54,8 +60,12 @@ const validateStockInput = (productType, productSubtype, quantity) => {
 };
 
 const addStock = async () => {
+  productType.value = sanitizeInput(productType.value);
+  productSubtype.value = sanitizeInput(productSubtype.value);
+
   const error = validateStockInput(productType.value, productSubtype.value, quantity.value);
   if (error) {
+    popupNotification.value.show('Validation Error', error);
     return;
   }
 
@@ -63,13 +73,13 @@ const addStock = async () => {
 
   try {
     await stockStore.addStockToBackend(productType.value, productSubtype.value, quantity.value);
+
     productType.value = '';
     productSubtype.value = '';
     quantity.value = 1;
 
     popupNotification.value.show('Success!', 'Stock added successfully.');
   } catch (e) {
-
     popupNotification.value.show('Error!', 'Failed to add stock. Please try again.');
   } finally {
     loading.value = false;
