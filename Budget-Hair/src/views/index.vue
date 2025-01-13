@@ -164,13 +164,14 @@ const deleteProductType = async (productType) => {
   );
 
   if (confirmDelete) {
-    await stockStore.deleteProductType(productType); // Call the method from stockStore
+    await stockStore.deleteProductType(productType); // Make sure this matches the store method name
     // Remove the entire productType from stock
     delete stock.value[productType];
 
     alert(`${productType.toUpperCase()} product type deleted successfully!`);
   }
 };
+
 
 // Function to toggle visibility of dropdown menu
 const toggleDropdown = (productType, productSubtype) => {

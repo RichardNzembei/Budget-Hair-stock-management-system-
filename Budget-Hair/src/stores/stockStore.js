@@ -108,7 +108,6 @@ export const useStockStore = defineStore('stock', {
         console.error('Error deleting product type:', error.response?.data || error);
       }
     },
-    
 
     async deleteProductSubtype(productType, productSubtype) {
       try {
