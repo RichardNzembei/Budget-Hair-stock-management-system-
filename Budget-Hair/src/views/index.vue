@@ -63,7 +63,7 @@
                   <button @click="toggleDropdown(productType, productSubtype)" class="text-sm text-blue-500 hover:underline">
                     <img src="../assets/img/actions.png" alt="" class="h-6 w-6 mr-6">
                   </button>
-                  <div v-if="dropdownVisible[`${productType}-${productSubtype}`]" class="dropdown-menu absolute right-0 mt-2 bg-white rounded-md shadow-lg border border-gray-200">
+                  <div v-if="dropdownVisible[`${productType}-${productSubtype}`]" class="dropdown-menu absolute left-4  bg-white rounded-md shadow-lg border border-gray-200">
                     <div class="py-2">
                       <button @click="editStock(productType, productSubtype)" class="block px-4 py-2 text-sm text-blue-500 hover:bg-gray-100">
                         Edit
