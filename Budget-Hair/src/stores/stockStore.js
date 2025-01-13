@@ -20,11 +20,9 @@ export const useStockStore = defineStore('stock', {
 
         this.socket.on('stock-updated', (payload) => {
           console.log('Stock updated event received:', payload);
-        
-          const stockStore = useStockStore(); 
-          stockStore.fetchStock(); 
+          this.fetchStock();
         });
-        
+
         this.socket.on('connect', () => {
           console.log('Connected to WebSocket server');
         });
@@ -52,7 +50,7 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
-    async addStockToBackend(productType, productSubtype, quantity) {
+    async addStock(productType, productSubtype, quantity) {
       try {
         const stock = { productType, productSubtype, quantity };
         const response = await axios.post(`${apiBaseUrl}/api/stock`, stock);
@@ -64,6 +62,61 @@ export const useStockStore = defineStore('stock', {
         }
       } catch (error) {
         console.error('Error adding stock:', error.response?.data || error);
+      }
+    },
+
+    async editStock(productType, productSubtype, quantity) {
+      try {
+        const response = await axios.put(`${apiBaseUrl}/api/stock`, {
+          productType,
+          productSubtype,
+          quantity,
+        });
+
+        if (response.status === 200) {
+          console.log('Stock edited successfully:', response.data);
+          await this.fetchStock(); // Refresh stock data
+        }
+      } catch (error) {
+        console.error('Error editing stock:', error.response?.data || error);
+      }
+    },
+
+    async deleteStock(productType, productSubtype) {
+      try {
+        console.log('Deleting stock:', { productType, productSubtype });
+        const response = await axios.delete(`${apiBaseUrl}/api/stock`, {
+          data: { productType, productSubtype },
+        });
+
+        if (response.status === 200) {
+          console.log('Stock deleted successfully:', response.data);
+          await this.fetchStock(); // Refresh stock data
+        }
+      } catch (error) {
+        console.error('Error deleting stock:', error.response?.data || error);
+      }
+    },
+
+    async deleteProductType(productType) {
+      try {
+        // Call the DELETE /stock/:productType route to delete the product type
+        const response = await axios.delete(`${apiBaseUrl}/api/stock/${productType}`);
+        console.log(`${productType} deleted successfully`);
+        await this.fetchStock(); // Reload stock after deletion
+      } catch (error) {
+        console.error('Error deleting product type:', error.response?.data || error);
+      }
+    },
+    
+
+    async deleteProductSubtype(productType, productSubtype) {
+      try {
+        await axios.delete(`${apiBaseUrl}/api/stock/${productType}/${productSubtype}`);
+        console.log(`${productSubtype} deleted successfully`);
+        await this.fetchStock(); // Reload stock after deletion
+      } catch (error) {
+        console.error('Error deleting product subtype:', error);
       }
     },
   },

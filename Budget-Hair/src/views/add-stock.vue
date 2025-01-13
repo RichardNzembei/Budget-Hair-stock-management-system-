@@ -72,7 +72,7 @@ const addStock = async () => {
   loading.value = true;
 
   try {
-    await stockStore.addStockToBackend(productType.value, productSubtype.value, quantity.value);
+    await stockStore.addStock(productType.value, productSubtype.value, quantity.value);
 
     productType.value = '';
     productSubtype.value = '';
