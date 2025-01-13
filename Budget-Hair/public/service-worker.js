@@ -43,3 +43,26 @@ self.addEventListener('notificationclick', (event) => {
     })
   );
 });
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'fetch-stock') {
+    console.log('Background sync triggered to fetch stock data');
+    event.waitUntil(fetchStockDataAndUpdateCache());
+  }
+});
+
+async function fetchStockDataAndUpdateCache() {
+  try {
+    const response = await fetch('/api/stock');
+    if (!response.ok) {
+      throw new Error('Failed to fetch stock data');
+    }
+    const stockData = await response.json();
+
+    const cache = await caches.open('stock-cache');
+    await cache.put('/api/stock', new Response(JSON.stringify(stockData)));
+
+    console.log('Stock data fetched and cached successfully');
+  } catch (error) {
+    console.error('Error fetching stock data for background sync:', error);
+  }
+}

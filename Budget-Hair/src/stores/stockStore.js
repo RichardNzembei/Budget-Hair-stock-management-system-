@@ -14,6 +14,7 @@ export const useStockStore = defineStore('stock', {
   }),
 
   actions: {
+    // Initialize socket connection
     initSocket() {
       if (!this.socket) {
         this.socket = io(apiBaseUrl);
@@ -33,6 +34,7 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
+    // Disconnect the socket connection
     disconnectSocket() {
       if (this.socket) {
         this.socket.disconnect();
@@ -40,16 +42,21 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
+    // Fetch stock data from the backend
     async fetchStock() {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/stock`);
         this.stock = response.data;
         console.log('Fetched stock:', this.stock);
+
+        // Cache stock data for offline use
+        await this.cacheStockData(response.data);
       } catch (error) {
         console.error('Error fetching stock:', error.response?.data || error);
       }
     },
 
+    // Add new stock to the backend
     async addStock(productType, productSubtype, quantity) {
       try {
         const stock = { productType, productSubtype, quantity };
@@ -57,6 +64,7 @@ export const useStockStore = defineStore('stock', {
 
         if (response.status === 201) {
           console.log('Stock added successfully:', response.data);
+          await this.fetchStock(); // Reload stock after addition
         } else {
           console.error('Failed to add stock:', response.data);
         }
@@ -65,6 +73,7 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
+    // Edit existing stock data
     async editStock(productType, productSubtype, quantity) {
       try {
         const response = await axios.put(`${apiBaseUrl}/api/stock`, {
@@ -82,6 +91,7 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
+    // Delete stock
     async deleteStock(productType, productSubtype) {
       try {
         console.log('Deleting stock:', { productType, productSubtype });
@@ -91,16 +101,16 @@ export const useStockStore = defineStore('stock', {
 
         if (response.status === 200) {
           console.log('Stock deleted successfully:', response.data);
-          await this.fetchStock(); // Refresh stock data
+          await this.fetchStock(); // Reload stock after deletion
         }
       } catch (error) {
         console.error('Error deleting stock:', error.response?.data || error);
       }
     },
 
+    // Delete product type
     async deleteProductType(productType) {
       try {
-        // Call the DELETE /stock/:productType route to delete the product type
         const response = await axios.delete(`${apiBaseUrl}/api/stock/${productType}`);
         console.log(`${productType} deleted successfully`);
         await this.fetchStock(); // Reload stock after deletion
@@ -109,6 +119,7 @@ export const useStockStore = defineStore('stock', {
       }
     },
 
+    // Delete product subtype
     async deleteProductSubtype(productType, productSubtype) {
       try {
         await axios.delete(`${apiBaseUrl}/api/stock/${productType}/${productSubtype}`);
@@ -116,6 +127,44 @@ export const useStockStore = defineStore('stock', {
         await this.fetchStock(); // Reload stock after deletion
       } catch (error) {
         console.error('Error deleting product subtype:', error);
+      }
+    },
+
+    // Cache stock data for offline use
+    async cacheStockData(stockData) {
+      const cache = await caches.open('stock-cache');
+      const cachedResponse = new Response(JSON.stringify(stockData));
+      await cache.put('/api/stock', cachedResponse);
+      console.log('Stock data cached successfully');
+    },
+
+    // Sync stock data when app comes online (background sync)
+    async syncStockData() {
+      const cache = await caches.open('stock-cache');
+      const cachedResponse = await cache.match('/api/stock');
+      if (cachedResponse) {
+        const cachedStock = await cachedResponse.json();
+        console.log('Using cached stock data:', cachedStock);
+        this.stock = cachedStock;
+      } else {
+        console.log('No cached stock data available');
+      }
+
+      // Trigger background sync for updates
+      const tag = 'sync-stock';
+      if (navigator.serviceWorker) {
+        await navigator.serviceWorker.ready.then((registration) => {
+          return registration.sync.register(tag);
+        });
+        console.log('Stock data sync registered in background');
+      }
+    },
+
+    // Event listener for background sync
+    async handleBackgroundSync(event) {
+      if (event.tag === 'sync-stock') {
+        console.log('Background sync triggered for stock data');
+        await this.fetchStock();
       }
     },
   },

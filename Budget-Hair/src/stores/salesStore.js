@@ -54,6 +54,8 @@ export const useSalesStore = defineStore('sales', {
         const response = await axios.get(`${apiBaseUrl}/api/sales`);
         this.sales = response.data;
         console.log('Fetched sales:', response.data);
+        // Cache sales data
+        await this.cacheSalesData(response.data);
       } catch (error) {
         console.error('Error fetching sales:', error.response?.data || error);
       }
@@ -72,15 +74,15 @@ export const useSalesStore = defineStore('sales', {
         const response = await axios.post(`${apiBaseUrl}/api/sales`, sale);
         if (response.status === 201) {
           console.log('Sale added successfully:', response.data);
+          await this.fetchSales();
         }
-        await this.fetchSales();
       } catch (error) {
         console.error('Error adding sale:', error.response?.data || error);
       }
     },
 
     // Delete a sale
-    async deleteSale(saleId, productType, productSubtype, quantitySold) {
+    async deleteSale(saleId) {
       try {
         console.log(`Deleting sale with ID: ${saleId}`);
 
@@ -99,6 +101,44 @@ export const useSalesStore = defineStore('sales', {
         console.log('Sale deleted and stock restored.');
       } catch (error) {
         console.error('Error deleting sale:', error.response?.data || error);
+      }
+    },
+
+    // Cache sales data for offline use
+    async cacheSalesData(salesData) {
+      const cache = await caches.open('sales-cache');
+      const cachedResponse = new Response(JSON.stringify(salesData));
+      await cache.put('/api/sales', cachedResponse);
+      console.log('Sales data cached successfully');
+    },
+
+    // Sync sales data when app comes online (background sync)
+    async syncSalesData() {
+      const cache = await caches.open('sales-cache');
+      const cachedResponse = await cache.match('/api/sales');
+      if (cachedResponse) {
+        const cachedSales = await cachedResponse.json();
+        console.log('Using cached sales data:', cachedSales);
+        this.sales = cachedSales;
+      } else {
+        console.log('No cached sales data available');
+      }
+
+      // Trigger background sync for updates
+      const tag = 'sync-sales';
+      if (navigator.serviceWorker) {
+        await navigator.serviceWorker.ready.then((registration) => {
+          return registration.sync.register(tag);
+        });
+        console.log('Sales data sync registered in background');
+      }
+    },
+
+    // Event listener for background sync
+    async handleBackgroundSync(event) {
+      if (event.tag === 'sync-sales') {
+        console.log('Background sync triggered for sales data');
+        await this.fetchSales();
       }
     },
   },
