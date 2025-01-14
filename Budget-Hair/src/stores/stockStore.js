@@ -1,15 +1,16 @@
-import { defineStore } from 'pinia';
-import axios from 'axios';
-import { io } from 'socket.io-client';
+import { defineStore } from "pinia";
+import axios from "axios";
+import { io } from "socket.io-client";
 
 const apiBaseUrl =
-  process.env.NODE_ENV === 'production'
-    ? 'https://budget-hair-stock-management-system.onrender.com'
-    : 'http://localhost:5000';
+  process.env.NODE_ENV === "production"
+    ? "https://budget-hair-stock-management-system.onrender.com"
+    : "http://localhost:5000";
 
-export const useStockStore = defineStore('stock', {
+export const useStockStore = defineStore("stock", {
   state: () => ({
     stock: {},
+    stockHistory: [], // State to hold the stock history
     socket: null,
   }),
 
@@ -19,17 +20,17 @@ export const useStockStore = defineStore('stock', {
       if (!this.socket) {
         this.socket = io(apiBaseUrl);
 
-        this.socket.on('stock-updated', (payload) => {
-          console.log('Stock updated event received:', payload);
+        this.socket.on("stock-updated", (payload) => {
+          console.log("Stock updated event received:", payload);
           this.fetchStock();
         });
 
-        this.socket.on('connect', () => {
-          console.log('Connected to WebSocket server');
+        this.socket.on("connect", () => {
+          console.log("Connected to WebSocket server");
         });
 
-        this.socket.on('disconnect', () => {
-          console.log('Disconnected from WebSocket server');
+        this.socket.on("disconnect", () => {
+          console.log("Disconnected from WebSocket server");
         });
       }
     },
@@ -47,12 +48,33 @@ export const useStockStore = defineStore('stock', {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/stock`);
         this.stock = response.data;
-        console.log('Fetched stock:', this.stock);
+        console.log("Fetched stock:", this.stock);
 
         // Cache stock data for offline use
         await this.cacheStockData(response.data);
       } catch (error) {
-        console.error('Error fetching stock:', error.response?.data || error);
+        console.error("Error fetching stock:", error.response?.data || error);
+      }
+    },
+
+    async fetchStockHistory() {
+      try {
+        const response = await axios.get(`${apiBaseUrl}/api/stock/history`);
+        this.stockHistory = response.data;
+
+        // Convert timestamp field if it's not already a Date object
+        this.stockHistory.forEach((record) => {
+          if (record.timestamp && !(record.timestamp instanceof Date)) {
+            record.timestamp = new Date(record.timestamp); // Convert to Date if not already
+          }
+        });
+
+        console.log("Fetched stock history:", this.stockHistory);
+      } catch (error) {
+        console.error(
+          "Error fetching stock history:",
+          error.response?.data || error
+        );
       }
     },
 
@@ -63,13 +85,14 @@ export const useStockStore = defineStore('stock', {
         const response = await axios.post(`${apiBaseUrl}/api/stock`, stock);
 
         if (response.status === 201) {
-          console.log('Stock added successfully:', response.data);
-          await this.fetchStock(); // Reload stock after addition
+          console.log("Stock added successfully:", response.data);
+          await this.fetchStock();
+          await this.fetchStockHistory();
         } else {
-          console.error('Failed to add stock:', response.data);
+          console.error("Failed to add stock:", response.data);
         }
       } catch (error) {
-        console.error('Error adding stock:', error.response?.data || error);
+        console.error("Error adding stock:", error.response?.data || error);
       }
     },
 
@@ -83,31 +106,33 @@ export const useStockStore = defineStore('stock', {
         });
 
         if (response.status === 200) {
-          console.log('Stock edited successfully:', response.data);
+          console.log("Stock edited successfully:", response.data);
           await this.fetchStock(); // Refresh stock data
+          await this.fetchStockHistory(); // Fetch stock history after edit
         }
       } catch (error) {
-        console.error('Error editing stock:', error.response?.data || error);
+        console.error("Error editing stock:", error.response?.data || error);
       }
     },
 
     // Delete stock
     async deleteStock(productType, productSubtype) {
       try {
-        console.log('Deleting stock:', { productType, productSubtype });
+        console.log("Deleting stock:", { productType, productSubtype });
         const response = await axios.delete(`${apiBaseUrl}/api/stock`, {
           data: { productType, productSubtype },
         });
 
         if (response.status === 200) {
-          console.log('Stock deleted successfully:', response.data);
-          await this.fetchStock(); // Reload stock after deletion
+          console.log("Stock deleted successfully:", response.data);
+          await this.fetchStock();
+          await this.fetchStockHistory();
         }
       } catch (error) {
-        console.error('Error deleting stock:', error.response?.data || error);
+        console.error("Error deleting stock:", error.response?.data || error);
       }
     },
-
+  
     // Delete product type
     async deleteProductType(productType) {
       try {
@@ -118,52 +143,54 @@ export const useStockStore = defineStore('stock', {
         console.error('Error deleting product type:', error.response?.data || error);
       }
     },
-
     // Delete product subtype
     async deleteProductSubtype(productType, productSubtype) {
       try {
-        await axios.delete(`${apiBaseUrl}/api/stock/${productType}/${productSubtype}`);
+        await axios.delete(
+          `${apiBaseUrl}/api/stock/${productType}/${productSubtype}`
+        );
         console.log(`${productSubtype} deleted successfully`);
         await this.fetchStock(); // Reload stock after deletion
+        await this.fetchStockHistory(); // Fetch stock history after deletion
       } catch (error) {
-        console.error('Error deleting product subtype:', error);
+        console.error("Error deleting product subtype:", error);
       }
     },
 
     // Cache stock data for offline use
     async cacheStockData(stockData) {
-      const cache = await caches.open('stock-cache');
+      const cache = await caches.open("stock-cache");
       const cachedResponse = new Response(JSON.stringify(stockData));
-      await cache.put('/api/stock', cachedResponse);
-      console.log('Stock data cached successfully');
+      await cache.put("/api/stock", cachedResponse);
+      console.log("Stock data cached successfully");
     },
 
     // Sync stock data when app comes online (background sync)
     async syncStockData() {
-      const cache = await caches.open('stock-cache');
-      const cachedResponse = await cache.match('/api/stock');
+      const cache = await caches.open("stock-cache");
+      const cachedResponse = await cache.match("/api/stock");
       if (cachedResponse) {
         const cachedStock = await cachedResponse.json();
-        console.log('Using cached stock data:', cachedStock);
+        console.log("Using cached stock data:", cachedStock);
         this.stock = cachedStock;
       } else {
-        console.log('No cached stock data available');
+        console.log("No cached stock data available");
       }
 
       // Trigger background sync for updates
-      const tag = 'sync-stock';
+      const tag = "sync-stock";
       if (navigator.serviceWorker) {
         await navigator.serviceWorker.ready.then((registration) => {
           return registration.sync.register(tag);
         });
-        console.log('Stock data sync registered in background');
+        console.log("Stock data sync registered in background");
       }
     },
 
     // Event listener for background sync
     async handleBackgroundSync(event) {
-      if (event.tag === 'sync-stock') {
-        console.log('Background sync triggered for stock data');
+      if (event.tag === "sync-stock") {
+        console.log("Background sync triggered for stock data");
         await this.fetchStock();
       }
     },

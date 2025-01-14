@@ -1,59 +1,92 @@
 <template>
   <div class="p-6 bg-gray-50 min-h-screen">
-    <h1 class="text-sky-500 text-3xl font-semibold text-center mb-6">Sales Records</h1>
+    <h1 class="text-sky-500 text-3xl font-semibold text-center mb-2">Records</h1>
 
     <div class="flex justify-center mb-6">
       <button
         class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2 transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
-        @click="setFilter('daily')" :class="{ 'bg-blue-500 text-white': filter === 'daily' }">
-        Daily
+        @click="setView('sales')" :class="{ 'bg-blue-500 text-white': currentView === 'sales' }">
+        Sales
       </button>
       <button
         class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold mr-2 transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
-        @click="setFilter('monthly')" :class="{ 'bg-blue-500 text-white': filter === 'monthly' }">
-        Monthly
-      </button>
-      <button
-        class="border border-blue-500 text-blue-500 py-2 px-4 rounded-lg text-sm font-semibold transition-all duration-300 ease-in-out transform hover:bg-blue-500 hover:text-white"
-        @click="setFilter('allTime')" :class="{ 'bg-blue-500 text-white': filter === 'allTime' }">
-        All Time
+        @click="setView('stock')" :class="{ 'bg-blue-500 text-white': currentView === 'stock' }">
+        Stock
       </button>
     </div>
 
-    <div v-if="filteredRecords.length === 0" class="text-gray-500 text-center mb-6 font-semibold">
-      No sales records found for the selected filter.
+    <!-- Sales Records Section -->
+    <div v-if="currentView === 'sales'">
+      <div v-if="filteredSalesRecords.length === 0" class="text-gray-500 text-center mb-6 font-semibold">
+        No sales records found for the selected filter.
+      </div>
+
+      <div class="overflow-x-auto bg-white shadow-lg rounded-lg p-4" v-if="filteredSalesRecords.length > 0">
+        <h2 class="text-xl text-gray-700 font-semibold mb-4">Sales Records</h2>
+        <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Subtype</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Time</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(record, index) in filteredSalesRecords" :key="index" class="hover:bg-gray-50">
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.productType }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.productSubtype }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.quantitySold }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.date }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.time }}</td>
+
+              <td class="px-6 py-4 text-sm ">
+                <button 
+                  @click="deleteSale(record.id, record.productType, record.productSubtype, record.quantitySold)"
+                  class="text-red-500 hover:text-red-700 hover:underline"
+                >
+                  Restore
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <div class="overflow-x-auto bg-white shadow-lg rounded-lg p-4" v-if="filteredRecords.length > 0">
-      <table class="min-w-full bg-white border border-gray-300 rounded-lg">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Subtype</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Time</th>
-            <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(record, index) in filteredRecords" :key="index" class="hover:bg-gray-50">
-            <td class="px-6 py-4 text-sm text-gray-600">{{ record.productType }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ record.productSubtype }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ record.quantitySold }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ record.date }}</td>
-            <td class="px-6 py-4 text-sm text-gray-600">{{ record.time }}</td>
-            <td class="px-6 py-4 text-sm ">
-              <button 
-                @click="deleteSale(record.id, record.productType, record.productSubtype, record.quantitySold)"
-                class="text-red-500 hover:text-red-700 hover:underline"
-              >
-                Restore
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+    <!-- Stock History Section -->
+    <div v-if="currentView === 'stock'">
+      <div v-if="filteredStockHistory.length === 0" class="text-gray-500 text-center mb-6 font-semibold">
+        No stock history found for the selected filter.
+      </div>
+
+      <div class="overflow-x-auto bg-white shadow-lg rounded-lg p-4" v-if="filteredStockHistory.length > 0">
+        <h2 class="text-xl text-gray-700 font-semibold mb-4">Stock History</h2>
+        <table class="min-w-full bg-white border border-gray-300 rounded-lg">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Subtype</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Time</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="(record, index) in filteredStockHistory" :key="index" class="hover:bg-gray-50">
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.productType }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.productSubtype }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.quantity }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.date }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.time }}</td>
+              <td class="px-6 py-4 text-sm text-gray-600">{{ record.action }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
   </div>
 </template>
@@ -61,35 +94,32 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useSalesStore } from "@/stores/salesStore";
+import { useStockStore } from "@/stores/stockStore"; 
 import Swal from "sweetalert2";
 
-
-// Access the store
+// Access the stores
 const salesStore = useSalesStore();
-const filter = ref('daily');
+const stockStore = useStockStore();
+const currentView = ref('sales');  // Default view is 'sales'
 
-// Set filter function
-const setFilter = (value) => {
-  filter.value = value;
+// Define filter state
+const filter = ref('allTime');  // Default filter value is 'allTime'
+
+// Set view function to toggle between 'sales' and 'stock' views
+const setView = (view) => {
+  currentView.value = view;
 };
 
-// Computed property to filter sales
-const filteredRecords = computed(() => {
+// Filter sales records based on selected filter
+const filteredSalesRecords = computed(() => {
   if (!salesStore.sales || salesStore.sales.length === 0) {
     return [];
   }
 
   const now = new Date();
-  const sales = salesStore.sales.map((sale) => {
-    return {
-      ...sale,
-      saleTime: new Date(sale.saleTime),
-    };
-  });
-
-  return sales
+  return salesStore.sales
     .filter((sale) => {
-      const saleDate = sale.saleTime;
+      const saleDate = new Date(sale.saleTime);
       if (filter.value === 'daily') {
         return saleDate.toDateString() === now.toDateString();
       } else if (filter.value === 'monthly') {
@@ -104,33 +134,73 @@ const filteredRecords = computed(() => {
     })
     .map((sale) => ({
       ...sale,
-      date: sale.saleTime.toLocaleDateString(),
-      time: sale.saleTime.toLocaleTimeString(),
-      isSameDay: sale.saleTime.toDateString() === now.toDateString(),
+      date: new Date(sale.saleTime).toLocaleDateString(),
+      time: new Date(sale.saleTime).toLocaleTimeString(),
     }))
-    .sort((a, b) => b.saleTime - a.saleTime);
+    .sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime));
 });
 
-// Fetch sales data on mounted
+const filteredStockHistory = computed(() => {
+  const now = new Date();
+
+  return stockStore.stockHistory
+    .filter((historyRecord) => {
+      const { timestamp } = historyRecord;
+      if (!timestamp) {
+        console.log('Invalid timestamp:', timestamp);
+        return false;
+      }
+
+      const historyDate = new Date(timestamp); // Directly use the Date object
+
+      if (!historyDate.getTime()) {
+        console.log('Invalid Date:', historyDate);
+        return false; // Skip invalid dates
+      }
+
+      if (filter.value === 'daily') {
+        return historyDate.toDateString() === now.toDateString();
+      } else if (filter.value === 'monthly') {
+        return (
+          historyDate.getMonth() === now.getMonth() &&
+          historyDate.getFullYear() === now.getFullYear()
+        );
+      } else if (filter.value === 'allTime') {
+        return true;
+      }
+      return true;
+    })
+    .map((historyRecord) => {
+      const { timestamp } = historyRecord;
+      const historyDate = new Date(timestamp);
+
+      return {
+        ...historyRecord,
+        date: historyDate.toLocaleDateString(),
+        time: historyDate.toLocaleTimeString(),
+      };
+    })
+    .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+});
+
+
 onMounted(() => {
   salesStore.fetchSales();
+  stockStore.fetchStockHistory(); 
   salesStore.initSocket();
+  stockStore.initSocket();
 });
 
+// Function to delete a sale and restore stock
 const deleteSale = (saleId, productType, productSubtype, quantitySold) => {
+  salesStore.deleteSale(saleId);
+  stockStore.restoreStock(productType, productSubtype, quantitySold);
+
   Swal.fire({
-    title: "Are you sure?",
-    text: `You are about to restore the sale of ${quantitySold} ${productSubtype}(s) under ${productType}. This action cannot be undone.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
-    confirmButtonText: "Yes, restore it!",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      salesStore.deleteSale(saleId, productType, productSubtype, quantitySold);
-      Swal.fire("Restored!", "The sale has been restored.", "success");
-    }
+    title: "Restored to stock",
+    text: "Sale restored to stock successfully.",
+    icon: "success",
+    confirmButtonText: "OK",
   });
 };
 </script>
