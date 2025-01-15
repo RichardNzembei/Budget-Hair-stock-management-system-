@@ -59,7 +59,9 @@
     <!-- Stock History Section -->
     <div v-if="currentView === 'stock'">
       <div v-if="filteredStockHistory.length === 0" class="text-gray-500 text-center mb-6 font-semibold">
-        No stock history found for the selected filter.
+        No stock history found for <span class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide">
+            today
+          </span> .
       </div>
 
       <div class="overflow-x-auto bg-white shadow-lg rounded-lg p-4" v-if="filteredStockHistory.length > 0">
