@@ -102,9 +102,13 @@ router.get('/sales', async (req, res) => {
   }
 });
 
-// Route to delete a sale and restore stock
-router.delete('/sales/:id', async (req, res) => {
+router.patch('/sales/:id', async (req, res) => {
   const saleId = req.params.id;
+  const { quantityToRestore } = req.query; // Now using query params for quantity to restore
+
+  if (!quantityToRestore || quantityToRestore <= 0) {
+    return res.status(400).json({ error: 'Invalid quantity to restore' });
+  }
 
   try {
     const saleDoc = await firestore.collection('sales').doc(saleId).get();
@@ -114,31 +118,56 @@ router.delete('/sales/:id', async (req, res) => {
 
     const saleData = saleDoc.data();
 
+    // Ensure quantity to restore does not exceed the quantity sold
+    if (quantityToRestore > saleData.quantitySold) {
+      return res.status(400).json({ error: 'Quantity to restore cannot exceed quantity sold' });
+    }
+
+    // Update the stock
     const stockRef = firestore.collection('stock').doc(saleData.productType);
     const stockDoc = await stockRef.get();
 
     let productData = stockDoc.exists ? stockDoc.data() : {};
 
+    // Update the stock for the specific product subtype
     if (productData[saleData.productSubtype]) {
-      productData[saleData.productSubtype] += saleData.quantitySold;
+      productData[saleData.productSubtype] += parseInt(quantityToRestore);
     } else {
-      productData[saleData.productSubtype] = saleData.quantitySold;
+      productData[saleData.productSubtype] = parseInt(quantityToRestore);
     }
 
+    // Update the stock with the restored quantity
     await stockRef.set(productData);
 
-    await firestore.collection('sales').doc(saleId).delete();
+    // Check if the entire sale is restored
+    const updatedQuantitySold = saleData.quantitySold - quantityToRestore;
 
-    req.io.emit('sale-updated');
+    if (updatedQuantitySold <= 0) {
+      // If the entire sale is restored, delete the sale
+      await firestore.collection('sales').doc(saleId).delete();
+      req.io.emit('sale-deleted');
+      res.status(200).json({ message: 'Sale fully restored and deleted, stock updated' });
+    } else {
+      // Otherwise, just update the sale with the remaining quantity
+      await firestore.collection('sales').doc(saleId).update({
+        quantitySold: updatedQuantitySold,
+      });
+      req.io.emit('sale-updated');
+      res.status(200).json({ message: 'Sale updated and stock restored' });
+    }
+
+    // Emit stock update event
     req.io.emit('stock-updated', {
       productType: saleData.productType,
       isNewProduct: !stockDoc.exists,
     });
 
-    // Send notification for deleted sale
+    // Send notification for updated sale and stock
     const notificationPayload = {
-      title: 'Sale Deleted',
-      body: `A sale of ${saleData.quantitySold} ${saleData.productSubtype} of ${saleData.productType} was restored to stock.`,
+      title: 'Sale Updated',
+      body: updatedQuantitySold <= 0
+        ? `The sale of ${saleData.quantitySold} ${saleData.productSubtype} of ${saleData.productType} has been fully restored and deleted.`
+        : `The sale of ${saleData.quantitySold} ${saleData.productSubtype} of ${saleData.productType} has been updated. ${quantityToRestore} items have been restored to stock.`,
       icon: '/path/to/icon.png', // Optional: path to notification icon
       actions: [
         { action: 'view', title: 'View Details' },
@@ -146,11 +175,12 @@ router.delete('/sales/:id', async (req, res) => {
     };
     await sendNotification(notificationPayload);
 
-    res.status(200).json({ message: 'Sale deleted and stock restored' });
   } catch (error) {
-    console.error('Error deleting sale:', error);
-    res.status(500).json({ error: 'Error deleting sale and restoring stock' });
+    console.error('Error updating sale and restoring stock:', error);
+    res.status(500).json({ error: 'Error updating sale and restoring stock' });
   }
 });
+
+
 
 module.exports = router;

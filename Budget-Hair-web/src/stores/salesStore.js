@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
 import { io } from 'socket.io-client';
+import Swal from "sweetalert2";
 
 const apiBaseUrl =
   process.env.NODE_ENV === 'production'
@@ -79,28 +80,71 @@ export const useSalesStore = defineStore('sales', {
       }
     },
 
-    // Delete a sale
     async deleteSale(saleId, productType, productSubtype, quantitySold) {
       try {
-        console.log(`Deleting sale with ID: ${saleId}`);
+        console.log(`Updating sale with ID: ${saleId}`);
 
-        // Step 1: Delete sale from the database
-        const response = await axios.delete(`${apiBaseUrl}/api/sales/${saleId}`);
-        if (response.status === 200) {
-          console.log('Sale deleted successfully:', response.data);
-        } else {
-          console.log('Failed to delete sale:', response);
+        const result = await Swal.fire({
+          title: "Enter quantity to restore",
+          input: "number",
+          inputLabel: "Quantity to restore",
+          inputValue: quantitySold || 0,
+          inputAttributes: {
+            min: 1,
+            max: quantitySold,
+            step: 1,
+          },
+          showCancelButton: true,
+          confirmButtonText: "Restore",
+          cancelButtonText: "Cancel",
+          preConfirm: (quantityToRestore) => {
+            if (quantityToRestore <= 0) {
+              Swal.showValidationMessage("Quantity must be greater than 0");
+              return false;
+            }
+            return quantityToRestore;
+          },
+        });
+
+        if (!result.isConfirmed) {
           return;
         }
 
-        // Step 2: Fetch updated sales list
-        await this.fetchSales();
+        const quantityToRestore = result.value;
 
-        console.log('Sale deleted and stock restored.');
+        const response = await axios.patch(
+          `${apiBaseUrl}/api/sales/${saleId}`,
+          null,
+          {
+            params: { quantityToRestore },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("Sale updated successfully:", response.data);
+
+          await this.fetchSales();
+
+          Swal.fire({
+            title: "Restored to stock",
+            text: `${quantityToRestore} units of ${productType}, ${productSubtype} restored to stock successfully.`,
+            icon: "success",
+            confirmButtonText: "OK",
+          });
+        } else {
+          console.log("Failed to update sale:", response);
+        }
       } catch (error) {
-        console.error('Error deleting sale:', error.response?.data || error);
+        console.error("Error updating sale:", error.response?.data || error);
+        Swal.fire({
+          title: "Error",
+          text: "There was an error processing the request.",
+          icon: "error",
+          confirmButtonText: "OK",
+        });
       }
     },
+
   },
 
   persist: true,

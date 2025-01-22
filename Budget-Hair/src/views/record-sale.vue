@@ -26,7 +26,8 @@
         <table class="min-w-full bg-white border border-gray-300 rounded-lg">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type
+              </th>
               <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Subtype</th>
               <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
               <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date</th>
@@ -43,10 +44,8 @@
               <td class="px-6 py-4 text-sm text-gray-600">{{ record.time }}</td>
 
               <td class="px-6 py-4 text-sm ">
-                <button 
-                  @click="deleteSale(record.id, record.productType, record.productSubtype, record.quantitySold)"
-                  class="text-red-500 hover:text-red-700 hover:underline"
-                >
+                <button @click="deleteSale(record.id, record.productType, record.productSubtype, record.quantitySold)"
+                  class="text-red-500 hover:text-red-700 hover:underline">
                   Restore
                 </button>
               </td>
@@ -59,9 +58,10 @@
     <!-- Stock History Section -->
     <div v-if="currentView === 'stock'">
       <div v-if="filteredStockHistory.length === 0" class="text-gray-500 text-center mb-6 font-semibold">
-        No stock history found for <span class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide">
-            today
-          </span> .
+        No stock history found for <span
+          class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide">
+          today
+        </span> .
       </div>
 
       <div class="overflow-x-auto bg-white shadow-lg rounded-lg p-4" v-if="filteredStockHistory.length > 0">
@@ -69,7 +69,8 @@
         <table class="min-w-full bg-white border border-gray-300 rounded-lg">
           <thead class="bg-gray-100">
             <tr>
-              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type</th>
+              <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Product Type
+              </th>
               <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Subtype</th>
               <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Quantity</th>
               <th class="px-6 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">Date</th>
@@ -96,7 +97,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useSalesStore } from "@/stores/salesStore";
-import { useStockStore } from "@/stores/stockStore"; 
+import { useStockStore } from "@/stores/stockStore";
 import Swal from "sweetalert2";
 
 // Access the stores
@@ -188,23 +189,20 @@ const filteredStockHistory = computed(() => {
 
 onMounted(() => {
   salesStore.fetchSales();
-  stockStore.fetchStockHistory(); 
+  stockStore.fetchStockHistory();
   salesStore.initSocket();
   stockStore.initSocket();
 });
 
-// Function to delete a sale and restore stock
-const deleteSale = (saleId, productType, productSubtype, quantitySold) => {
-  salesStore.deleteSale(saleId);
-  stockStore.restoreStock(productType, productSubtype, quantitySold);
+const deleteSale = async (saleId, productType, productSubtype, quantitySold) => {
 
-  Swal.fire({
-    title: "Restored to stock",
-    text: "Sale restored to stock successfully.",
-    icon: "success",
-    confirmButtonText: "OK",
-  });
-};
+  salesStore.deleteSale(saleId,productType,productSubtype,quantitySold);
+
+
+
+}
+
+
 </script>
 
 <style scoped>

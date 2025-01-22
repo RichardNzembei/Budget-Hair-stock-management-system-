@@ -44,12 +44,10 @@
             <td class="px-6 py-4 text-sm text-gray-600">{{ record.date }}</td>
             <td class="px-6 py-4 text-sm text-gray-600">{{ record.time }}</td>
             <td class="px-6 py-4 text-sm ">
-              <button 
-                @click="deleteSale(record.id, record.productType, record.productSubtype, record.quantitySold)"
-                class="text-red-500 hover:text-red-700 hover:underline"
-              >
-                Restore
-              </button>
+              <button @click="deleteSale(record.id, record.productType, record.productSubtype, record.quantitySold)"
+                  class="text-red-500 hover:text-red-700 hover:underline">
+                  Restore
+                </button>
             </td>
           </tr>
         </tbody>
@@ -117,22 +115,15 @@ onMounted(() => {
   salesStore.initSocket();
 });
 
-const deleteSale = (saleId, productType, productSubtype, quantitySold) => {
-  Swal.fire({
-    title: "Are you sure?",
-    text: `You are about to restore the sale of ${quantitySold} ${productSubtype}(s) under ${productType}. This action cannot be undone.`,
-    icon: "warning",
-    showCancelButton: true,
-    confirmButtonColor: "#d33",
-    cancelButtonColor: "#3085d6",
-    confirmButtonText: "Yes, restore it!",
-  }).then((result) => {
-    if (result.isConfirmed) {
-      salesStore.deleteSale(saleId, productType, productSubtype, quantitySold);
-      Swal.fire("Restored!", "The sale has been restored.", "success");
-    }
-  });
-};
+
+const deleteSale = async (saleId, productType, productSubtype, quantitySold) => {
+
+salesStore.deleteSale(saleId,productType,productSubtype,quantitySold);
+
+
+
+}
+
 </script>
 
 <style scoped>
