@@ -27,7 +27,7 @@ const deleteOldSalesFields = async () => {
   console.log("Old sales deleted successfully.");
 };
 
-// Schedule deletion every 24 hours at midnight
+
 cron.schedule("0 0 * * *", deleteOldSalesFields);
 
 module.exports = deleteOldSalesFields;

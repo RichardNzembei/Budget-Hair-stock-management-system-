@@ -8,7 +8,7 @@ const vapidKeys = {
   privateKey: 'IQtpY0qIYG999VvQXcPAcmK7PnIYbwBJYY5I3If-MJA',
 };
 
-// Set VAPID details
+
 webPush.setVapidDetails('mailto:richardsonreuben78@gmail.com', vapidKeys.publicKey, vapidKeys.privateKey);
 
 router.post('/subscribe', async (req, res) => {
