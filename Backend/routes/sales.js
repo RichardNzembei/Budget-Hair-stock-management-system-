@@ -2,6 +2,7 @@ const express = require('express');
 const webPush = require('web-push');
 const firestore = require('../firebaseConfig');
 const router = express.Router();
+const deleteOldSalesFields = require("../cron/salesCleanup");
 
 // VAPID keys for Web Push notifications (secured using environment variables)
 const vapidKeys = {
@@ -181,6 +182,19 @@ router.patch('/sales/:id', async (req, res) => {
   }
 });
 
+router.post("/delete-sales-now", async (req, res) => {
+  console.log("🔄 Manual deletion job triggered...");
 
+  try {
+    await deleteOldSalesFields();
+    console.log("✅ Manual deletion completed successfully.");
+    
+    res.status(200).json({ message: "Manual deletion job ran successfully." });
+  } catch (error) {
+    console.error("❌ Error running deletion job:", error);
+
+    res.status(500).json({ error: "Error running deletion job" });
+  }
+});
 
 module.exports = router;

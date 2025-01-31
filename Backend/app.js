@@ -6,6 +6,7 @@ const socketIo = require('socket.io');
 const stockRoutes = require('./routes/stocks');
 const salesRoutes = require('./routes/sales');
 const notificationRoutes = require('./routes/notifications');
+require("./cron/salesCleanup");
 
 const app = express();
 const server = http.createServer(app);
