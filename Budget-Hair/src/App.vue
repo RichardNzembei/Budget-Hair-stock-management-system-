@@ -21,19 +21,16 @@ onMounted(() => {
   stockStore.initSocket();
   salesStore.initSocket();
 
-  // Check if the user is already subscribed for notifications
   if (notificationStore.subscription) {
     isSubscribed.value = true;
   } else {
     isSubscribed.value = false;
   }
 
-  // Initialize socket for notification updates
   notificationStore.initSocket();
 });
 
 onUnmounted(() => {
-  // Disconnect sockets when the component is unmounted
   stockStore.disconnectSocket();
   salesStore.disconnectSocket();
   notificationStore.disconnectSocket();

@@ -16,30 +16,42 @@ export const useSalesStore = defineStore("sales", {
 
   actions: {
     initSocket() {
-      if (!this.socket) {
-        this.socket = io(apiBaseUrl);
+      if (this.socket) return; // Prevent multiple socket instances
 
-        this.socket.on("sale-updated", () => {
-          console.log("Sale data updated!");
-          this.fetchSales();
-        });
+      this.socket = io(apiBaseUrl, { reconnection: false });
 
-        this.socket.on("stock-updated", () => {
-          console.log("Stock data updated!");
-          // Additional logic can go here if needed
-        });
+      this.socket.on("connect", () => {
+        console.log("Connected to WebSocket");
+      });
 
-        this.socket.on("connect_error", (err) => {
-          console.error("Socket connection error:", err);
-        });
+      this.socket.on("disconnect", () => {
+        console.warn("WebSocket disconnected. Attempting to reconnect...");
+        this.reconnect();
+      });
 
-        this.socket.on("disconnect", () => {
-          console.log("Socket disconnected");
-        });
-      }
+      this.socket.on("sale-updated", (updatedSale) => {
+        this.updateSale(updatedSale);
+        console.log("Sale updated in real-time");
+      });
+
+      this.socket.on("stock-updated", () => {
+        console.log("Stock data updated!");
+      });
+
+      this.socket.on("connect_error", (err) => {
+        console.error("Socket connection error:", err);
+      });
     },
 
-    // Disconnect the socket
+    // Reconnect WebSocket after 3 seconds if disconnected
+    reconnect() {
+      setTimeout(() => {
+        console.log("Reconnecting to WebSocket...");
+        this.initSocket();
+      }, 3000);
+    },
+
+    // Disconnect WebSocket
     disconnectSocket() {
       if (this.socket) {
         this.socket.disconnect();
@@ -48,17 +60,28 @@ export const useSalesStore = defineStore("sales", {
       }
     },
 
+    // Fetch all sales
     async fetchSales() {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/sales`);
         this.sales = response.data;
         console.log("Fetched sales:", response.data);
-        await this.cacheSalesData(response.data);
       } catch (error) {
         console.error("Error fetching sales:", error.response?.data || error);
       }
     },
 
+    // Update a single sale in the state instead of refetching all
+    updateSale(updatedSale) {
+      const index = this.sales.findIndex((sale) => sale.id === updatedSale.id);
+      if (index !== -1) {
+        this.sales[index] = updatedSale;
+      } else {
+        this.sales.push(updatedSale);
+      }
+    },
+
+    // Add a sale to the backend
     async addSaleToBackend(productType, productSubtype, quantitySold) {
       try {
         const sale = {
@@ -71,13 +94,13 @@ export const useSalesStore = defineStore("sales", {
         const response = await axios.post(`${apiBaseUrl}/api/sales`, sale);
         if (response.status === 201) {
           console.log("Sale added successfully:", response.data);
-          await this.fetchSales();
         }
       } catch (error) {
         console.error("Error adding sale:", error.response?.data || error);
       }
     },
 
+    // Delete sale and restore quantity
     async deleteSale(saleId, productType, productSubtype, quantitySold) {
       try {
         console.log(`Updating sale with ID: ${saleId}`);
@@ -105,7 +128,8 @@ export const useSalesStore = defineStore("sales", {
         });
 
         if (!result.isConfirmed) {
-          return;
+          console.log("User canceled sale restore.");
+          return; // Stop execution if user cancels
         }
 
         const quantityToRestore = result.value;
@@ -113,19 +137,15 @@ export const useSalesStore = defineStore("sales", {
         const response = await axios.patch(
           `${apiBaseUrl}/api/sales/${saleId}`,
           null,
-          {
-            params: { quantityToRestore },
-          }
+          { params: { quantityToRestore } }
         );
 
         if (response.status === 200) {
           console.log("Sale updated successfully:", response.data);
 
-          await this.fetchSales();
-
           Swal.fire({
             title: "Restored to stock",
-            text: `${quantityToRestore} units of ${productType}, ${productSubtype} restored to stock successfully.`,
+            text: `${quantityToRestore} units of ${productType}, ${productSubtype} restored successfully.`,
             icon: "success",
             confirmButtonText: "OK",
           });
@@ -142,6 +162,7 @@ export const useSalesStore = defineStore("sales", {
         });
       }
     },
+  
 
     async cacheSalesData(salesData) {
       const cache = await caches.open("sales-cache");

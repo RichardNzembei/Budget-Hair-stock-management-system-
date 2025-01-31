@@ -103,17 +103,14 @@ import Swal from "sweetalert2";
 // Access the stores
 const salesStore = useSalesStore();
 const stockStore = useStockStore();
-const currentView = ref('sales');  // Default view is 'sales'
+const currentView = ref('sales');
 
-// Define filter state
-const filter = ref('allTime');  // Default filter value is 'allTime'
+const filter = ref('allTime');
 
-// Set view function to toggle between 'sales' and 'stock' views
 const setView = (view) => {
   currentView.value = view;
 };
 
-// Filter sales records based on selected filter
 const filteredSalesRecords = computed(() => {
   if (!salesStore.sales || salesStore.sales.length === 0) {
     return [];
@@ -154,11 +151,11 @@ const filteredStockHistory = computed(() => {
         return false;
       }
 
-      const historyDate = new Date(timestamp); // Directly use the Date object
+      const historyDate = new Date(timestamp);
 
       if (!historyDate.getTime()) {
         console.log('Invalid Date:', historyDate);
-        return false; // Skip invalid dates
+        return false;
       }
 
       if (filter.value === 'daily') {
@@ -188,15 +185,14 @@ const filteredStockHistory = computed(() => {
 
 
 onMounted(() => {
-  salesStore.fetchSales();
-  stockStore.fetchStockHistory();
+
   salesStore.initSocket();
   stockStore.initSocket();
 });
 
 const deleteSale = async (saleId, productType, productSubtype, quantitySold) => {
 
-  salesStore.deleteSale(saleId,productType,productSubtype,quantitySold);
+  salesStore.deleteSale(saleId, productType, productSubtype, quantitySold);
 
 
 

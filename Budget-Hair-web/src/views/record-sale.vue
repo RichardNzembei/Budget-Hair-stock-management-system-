@@ -62,16 +62,16 @@ import { useSalesStore } from "@/stores/salesStore";
 import Swal from "sweetalert2";
 
 
-// Access the store
+
 const salesStore = useSalesStore();
 const filter = ref('daily');
 
-// Set filter function
+
 const setFilter = (value) => {
   filter.value = value;
 };
 
-// Computed property to filter sales
+
 const filteredRecords = computed(() => {
   if (!salesStore.sales || salesStore.sales.length === 0) {
     return [];
@@ -111,7 +111,7 @@ const filteredRecords = computed(() => {
 
 // Fetch sales data on mounted
 onMounted(() => {
-  salesStore.fetchSales();
+ 
   salesStore.initSocket();
 });
 

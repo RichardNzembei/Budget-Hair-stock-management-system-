@@ -7,7 +7,8 @@
       <div class="bg-white p-6 rounded shadow-md">
         <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">
           SALES OVERVIEW
-          <span class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide">
+          <span
+            class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide">
             today's
           </span>
         </h2>
@@ -17,7 +18,8 @@
         </div>
 
         <ul v-else class="space-y-4">
-          <li v-for="sale in salesItems" :key="sale.id" class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4">
+          <li v-for="sale in salesItems" :key="sale.id"
+            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4">
             <div class="text-sm">
               <strong class="text-gray-600">{{ sale.productType.toUpperCase() }}</strong>
               <br />
@@ -40,7 +42,8 @@
         </div>
 
         <ul v-else class="space-y-3">
-          <li v-for="(subtypes, productType) in stock" :key="productType" class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
+          <li v-for="(subtypes, productType) in stock" :key="productType"
+            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
             <!-- Delete Product Type Button -->
             <div class="flex justify-between items-center">
               <h3 class="font-semibold text-sm text-gray-600 mb-2 flex-1">{{ productType.toUpperCase() }}</h3>
@@ -48,7 +51,7 @@
                 <img src="../assets/img/delete.png" alt="delete" class="h-6 w-6">
               </button>
             </div>
-            
+
             <ul class="space-y-2 text-sm">
               <li v-for="(quantity, productSubtype) in subtypes" :key="productSubtype" class="text-gray-800 space-x-4">
                 <span class="font-medium text-gray-600">{{ productSubtype.toUpperCase() }}:</span>
@@ -60,15 +63,19 @@
 
                 <!-- Dropdown Button for Actions -->
                 <div class="relative inline-block text-left mt-2">
-                  <button @click="toggleDropdown(productType, productSubtype)" class="text-sm text-blue-500 hover:underline">
+                  <button @click="toggleDropdown(productType, productSubtype)"
+                    class="text-sm text-blue-500 hover:underline">
                     <img src="../assets/img/actions.png" alt="" class="h-6 w-6 mr-6">
                   </button>
-                  <div v-if="dropdownVisible[`${productType}-${productSubtype}`]" class="dropdown-menu absolute left-4  bg-white rounded-md shadow-lg border border-gray-200">
+                  <div v-if="dropdownVisible[`${productType}-${productSubtype}`]"
+                    class="dropdown-menu absolute left-4  bg-white rounded-md shadow-lg border border-gray-200">
                     <div class="py-2">
-                      <button @click="editStock(productType, productSubtype)" class="block px-4 py-2 text-sm text-blue-500 hover:bg-gray-100">
+                      <button @click="editStock(productType, productSubtype)"
+                        class="block px-4 py-2 text-sm text-blue-500 hover:bg-gray-100">
                         Edit
                       </button>
-                      <button @click="deleteProductSubtype(productType, productSubtype)" class="block px-4 py-2 text-sm text-red-500 hover:bg-gray-100">
+                      <button @click="deleteProductSubtype(productType, productSubtype)"
+                        class="block px-4 py-2 text-sm text-red-500 hover:bg-gray-100">
                         Delete
                       </button>
                     </div>
@@ -145,11 +152,10 @@ const deleteProductSubtype = async (productType, productSubtype) => {
   );
 
   if (confirmDelete) {
-    await stockStore.deleteStock(productType, productSubtype); // Update stock data
-    // Remove the productSubtype from stock
+    await stockStore.deleteStock(productType, productSubtype);
+
     delete stock.value[productType][productSubtype];
 
-    // If the productType now has no subtypes, remove the whole productType
     if (Object.keys(stock.value[productType]).length === 0) {
       delete stock.value[productType];
     }
@@ -164,8 +170,8 @@ const deleteProductType = async (productType) => {
   );
 
   if (confirmDelete) {
-    await stockStore.deleteProductType(productType); // Make sure this matches the store method name
-    // Remove the entire productType from stock
+    await stockStore.deleteProductType(productType);
+
     delete stock.value[productType];
 
     alert(`${productType.toUpperCase()} product type deleted successfully!`);
@@ -173,13 +179,12 @@ const deleteProductType = async (productType) => {
 };
 
 
-// Function to toggle visibility of dropdown menu
 const toggleDropdown = (productType, productSubtype) => {
   const key = `${productType}-${productSubtype}`;
   dropdownVisible.value[key] = !dropdownVisible.value[key];
 };
 
-// Close the dropdown when clicking outside
+
 const closeDropdown = (event) => {
   if (!event.target.closest('.relative')) {
     dropdownVisible.value = {};
