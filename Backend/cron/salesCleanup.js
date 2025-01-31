@@ -2,7 +2,7 @@ const cron = require("node-cron");
 const admin = require("firebase-admin");
 
 const db = admin.firestore();
-const DELETE_AFTER_DAYS = 10; // Delete sales older than 10 days
+const DELETE_AFTER_DAYS = 5; 
 
 const deleteOldSalesFields = async () => {
   console.log("Running sales deletion job...");
