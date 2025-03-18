@@ -142,6 +142,8 @@ const filteredSalesRecords = computed(() => {
 
 const filteredStockHistory = computed(() => {
   const now = new Date();
+  console.log('Filter value:', filter.value); // Debug log
+  console.log('Stock History:', stockStore.stockHistory); // Debug log
 
   return stockStore.stockHistory
     .filter((historyRecord) => {
@@ -159,6 +161,7 @@ const filteredStockHistory = computed(() => {
       }
 
       if (filter.value === 'daily') {
+        console.log('Daily filter:', historyDate.toDateString(), now.toDateString()); // Debug log
         return historyDate.toDateString() === now.toDateString();
       } else if (filter.value === 'monthly') {
         return (
@@ -188,6 +191,8 @@ onMounted(() => {
 
   salesStore.initSocket();
   stockStore.initSocket();
+  stockStore.fetchStockHistory(); // Ensure stock history is loaded
+  console.log('Stock History on mount:', stockStore.stockHistory);
 });
 
 const deleteSale = async (saleId, productType, productSubtype, quantitySold) => {

@@ -200,6 +200,8 @@ router.get("/stock/history", async (req, res) => {
     const todayEnd = new Date();
     todayEnd.setHours(23, 59, 59, 999);
 
+    console.log("Query range:", todayStart, todayEnd); // Debug log
+
     const snapshot = await firestore
       .collection("stock_history")
       .where("timestamp", ">=", admin.firestore.Timestamp.fromDate(todayStart))
@@ -217,27 +219,13 @@ router.get("/stock/history", async (req, res) => {
       history.push(data);
     });
 
+    console.log("Stock history fetched from Firestore:", history); // Debug log
     res.status(200).json(history);
   } catch (error) {
     console.error("Error fetching stock history:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
-cron.schedule("0 0 0 * * *", async () => {
-  try {
-    const snapshot = await firestore.collection("stock_history").get();
 
-    const batch = firestore.batch();
-    snapshot.forEach((doc) => {
-      batch.delete(doc.ref);
-    });
-
-    await batch.commit();
-
-    console.log("All stock history records deleted successfully");
-  } catch (error) {
-    console.error("Error deleting stock history:", error);
-  }
-});
 
 module.exports = router;

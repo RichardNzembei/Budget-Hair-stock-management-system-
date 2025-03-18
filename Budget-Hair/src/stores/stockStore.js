@@ -51,25 +51,17 @@ export const useStockStore = defineStore("stock", {
         console.error("Error fetching stock:", error.response?.data || error);
       }
     },
-
     async fetchStockHistory() {
       try {
         const response = await axios.get(`${apiBaseUrl}/api/stock/history`);
+        console.log("API Response:", response.data); // Debug log
         this.stockHistory = response.data;
-        this.stockHistory.forEach((record) => {
-          if (record.timestamp && !(record.timestamp instanceof Date)) {
-            record.timestamp = new Date(record.timestamp);
-          }
-        });
-
         console.log("Fetched stock history:", this.stockHistory);
       } catch (error) {
-        console.error(
-          "Error fetching stock history:",
-          error.response?.data || error
-        );
+        console.error("Error fetching stock history:", error.response?.data || error);
       }
     },
+    
 
     async addStock(productType, productSubtype, quantity) {
       try {
