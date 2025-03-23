@@ -168,6 +168,7 @@ router.patch('/sales/:id', async (req, res) => {
 });
 
 router.post("/delete-sales-now", async (req, res) => {
+  // curl -X POST http://localhost:5000/api/delete-sales-now
   console.log("🔄 Manual deletion job triggered...");
 
   try {
