@@ -7,16 +7,14 @@ import { useStockStore } from '@/stores/stockStore';
 import { useSalesStore } from '@/stores/salesStore';
 import { useNotificationStore } from '@/stores/notification';
 
-// Create store instances
 const stockStore = useStockStore();
 const salesStore = useSalesStore();
 const notificationStore = useNotificationStore();
 
 const isSubscribed = ref(false);
-
 onMounted(() => {
-  // Initialize stores
-  stockStore.fetchStock();
+  stockStore.syncStockData();
+  stockStore.fetchStock(true); // 👈 force fetch from server
   salesStore.fetchSales();
   stockStore.initSocket();
   salesStore.initSocket();
@@ -30,6 +28,7 @@ onMounted(() => {
   notificationStore.initSocket();
 });
 
+
 onUnmounted(() => {
   stockStore.disconnectSocket();
   salesStore.disconnectSocket();
@@ -40,7 +39,7 @@ onUnmounted(() => {
 <template>
   <Navbar />
   <Notification />
-  <div class="mt-20">
+  <div class="mt-20 bg-gray-50 min-h-screen">
     <RouterView />
   </div>
 </template>

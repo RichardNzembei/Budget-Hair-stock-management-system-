@@ -145,42 +145,6 @@ export const useSalesStore = defineStore("sales", {
         });
       }
     },
-    
-
-    async cacheSalesData(salesData) {
-      const cache = await caches.open("sales-cache");
-      const cachedResponse = new Response(JSON.stringify(salesData));
-      await cache.put("/api/sales", cachedResponse);
-      console.log("Sales data cached successfully");
     },
-
-    async syncSalesData() {
-      const cache = await caches.open("sales-cache");
-      const cachedResponse = await cache.match("/api/sales");
-      if (cachedResponse) {
-        const cachedSales = await cachedResponse.json();
-        console.log("Using cached sales data:", cachedSales);
-        this.sales = cachedSales;
-      } else {
-        console.log("No cached sales data available");
-      }
-
-      const tag = "sync-sales";
-      if (navigator.serviceWorker) {
-        await navigator.serviceWorker.ready.then((registration) => {
-          return registration.sync.register(tag);
-        });
-        console.log("Sales data sync registered in background");
-      }
-    },
-
-    async handleBackgroundSync(event) {
-      if (event.tag === "sync-sales") {
-        console.log("Background sync triggered for sales data");
-        await this.fetchSales();
-      }
-    },
-  },
-
   persist: true,
 });

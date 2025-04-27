@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6 text-center text-sky-500">Add Stock</h1>
+    <h1 class="text-md font-bold mb-6 text-center text-sky-500">Add Stock</h1>
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto">
       <form @submit.prevent="addStock">
         <div class="mb-6">
