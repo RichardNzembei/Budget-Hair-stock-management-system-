@@ -1,6 +1,6 @@
 <template>
   <div class="container mx-auto py-8">
-    <h1 class="text-3xl font-bold mb-6 text-center text-sky-500">Sell Product</h1>
+    <h1 class="text-md font-bold mb-6 text-center text-sky-500">Sell Product</h1>
     <div class="bg-white p-6 rounded-lg shadow-lg max-w-3xl mx-auto">
 
       <div v-if="Object.keys(stockStore.stock).length === 0">
@@ -85,7 +85,6 @@ onMounted(() => {
     console.log("Stock updated in real time");
   });
   salesStore.socket?.on("sale-updated", async () => {
-    await salesStore.fetchSales();
     console.log("Sales updated in real time");
   });
 });

@@ -1,60 +1,112 @@
 <template>
-  <div class="container mx-auto py-8">
-    <h1 class="text-md font-bold mb-6 text-center text-sky-500">MAIN DASHBOARD</h1>
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    <!-- Header with subtle gradient and better spacing -->
+    <div class="mb-8 text-center">
+      <h1 class="text-md font-bold mb-2 bg-gradient-to-r from-sky-500 to-blue-600 bg-clip-text text-transparent">
+        MAIN DASHBOARD
+      </h1>
+      <p class="text-sm text-gray-500">Real-time overview</p>
+    </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <!-- SALES OVERVIEW -->
-      <div class="bg-white p-6 rounded shadow-md">
-        <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">
-          SALES OVERVIEW
-          <span
-            class="today text-green-400 bg-white rounded-lg shadow-lg p-1 font-bold font-sans text-sm tracking-wide">
-            today's
-          </span>
-        </h2>
-
-        <!-- Message if no sales for today -->
-        <div v-if="salesItems.length === 0" class="text-center text-gray-500">
-          No sales for today.
+    <!-- Grid layout with responsive adjustments -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- SALES OVERVIEW CARD -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all hover:shadow-xl">
+        <!-- Card Header with accent border -->
+        <div class="border-b border-sky-100 bg-gradient-to-r from-sky-50 to-white p-5">
+          <div class="flex items-center justify-center space-x-2">
+            <h2 class="font-semibold text-gray-700 text-md">
+              SALES OVERVIEW
+            </h2>
+            <span class="today bg-sky-100 text-sky-600 rounded-full px-3 py-1 text-xs font-semibold shadow-inner">
+              Today
+            </span>
+          </div>
         </div>
 
-        <ul v-else class="space-y-4">
-          <li v-for="sale in salesItems" :key="sale.id"
-            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300 space-x-4">
-            <div class="text-sm">
-              <strong class="text-gray-600">{{ sale.productType.toUpperCase() }}</strong>
-              <br />
-              <span class="text-gray-600">{{ sale.productSubtype.toUpperCase() }}:</span>
-              <span class="text-green-500">{{ sale.quantitySold }}</span>
+        <!-- Card Body -->
+        <div class="p-5">
+          <!-- Empty state -->
+          <div v-if="salesItems.length === 0" class="text-center py-8">
+            <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+              </svg>
             </div>
-            <div class="text-gray-400 text-sm flex justify-end">
-              {{ formatSaleTime(sale.saleTime) }}
-            </div>
-          </li>
-        </ul>
+            <h3 class="text-gray-500 font-medium">No sales today</h3>
+            <p class="text-gray-400 text-sm mt-1">Your recent sales will appear here</p>
+          </div>
+
+          <!-- Sales List -->
+          <ul v-else class="divide-y divide-gray-100">
+            <li v-for="sale in salesItems" :key="sale.id" class="py-4 first:pt-0 last:pb-0">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                  <div class="bg-sky-100 p-2 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-sky-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 class="font-medium text-gray-800 text-sm">{{ sale.productType.toUpperCase() }}</h3>
+                    <p class="text-xs text-gray-500">
+                      {{ sale.productSubtype.toUpperCase() }}
+                      <span class="text-green-500 font-semibold ml-1">+{{ sale.quantitySold }}</span>
+                    </p>
+                  </div>
+                </div>
+                <span class="text-xs font-medium text-gray-400 bg-gray-50 px-2 py-1 rounded-full">
+                  {{ formatSaleTime(sale.saleTime) }}
+                </span>
+              </div>
+            </li>
+          </ul>
+        </div>
       </div>
 
-      <!-- STOCK OVERVIEW -->
-      <div class="bg-white p-6 rounded-lg shadow-lg">
-        <h2 class="font-semibold text-sm mb-4 text-gray-700 text-center">STOCK OVERVIEW</h2>
-
-        <!-- Message if no stock data -->
-        <div v-if="Object.keys(stock).length === 0" class="text-center text-gray-500">
-          No stock data available.
+      <!-- STOCK OVERVIEW CARD -->
+      <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all hover:shadow-xl">
+        <!-- Card Header with accent border -->
+        <div class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-white p-5">
+          <h2 class="font-semibold text-gray-700 text-md text-center">
+            STOCK OVERVIEW
+          </h2>
         </div>
 
-        <ul v-else class="space-y-3">
-          <li v-for="(subtypes, productType) in stock" :key="productType"
-            class="bg-gray-50 p-4 rounded-md shadow-md hover:bg-gray-100 transition duration-300">
-            <h3 class="font-semibold text-sm text-gray-600 mb-2">{{ productType.toUpperCase() }}</h3>
-            <ul class="space-y-2 text-sm">
-              <li v-for="(quantity, productSubtype) in subtypes" :key="productSubtype" class="text-gray-800 space-x-4">
-                <span class="font-medium text-gray-600">{{ productSubtype.toUpperCase() }}:</span>
-                <span class="text-sky-500 font-semibold">{{ quantity }}</span>
-              </li>
-            </ul>
-          </li>
-        </ul>
+        <!-- Card Body -->
+        <div class="p-5">
+          <!-- Empty state -->
+          <div v-if="Object.keys(stock).length === 0" class="text-center py-8">
+            <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+              </svg>
+            </div>
+            <h3 class="text-gray-500 font-medium">No stock data</h3>
+            <p class="text-gray-400 text-sm mt-1">Your inventory will appear here</p>
+          </div>
+
+          <!-- Stock List -->
+          <ul v-else class="space-y-4">
+            <li v-for="(subtypes, productType) in stock" :key="productType" class="bg-gray-50 rounded-lg p-4 hover:bg-gray-100 transition-colors">
+              <div class="flex items-center space-x-2 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+                <h3 class="font-semibold text-gray-700 text-sm">{{ productType.toUpperCase() }}</h3>
+              </div>
+              
+              <ul class="grid grid-cols-2 gap-3">
+                <li v-for="(quantity, productSubtype) in subtypes" :key="productSubtype" class="flex items-center justify-between bg-white p-2 rounded-md border border-gray-100">
+                  <span class="text-xs font-medium text-gray-600">{{ productSubtype.toUpperCase() }}</span>
+                  <span class="text-xs font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">
+                    {{ quantity }} in stock
+                  </span>
+                </li>
+              </ul>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   </div>
@@ -79,11 +131,11 @@ const salesItems = computed(() => {
     .sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime));
 });
 
-
 const formatSaleTime = (saleTime) => {
   const options = { hour: "2-digit", minute: "2-digit", hour12: true };
   return new Date(saleTime).toLocaleTimeString(undefined, options);
 };
+
 const loadDashboardData = async () => {
   if (Object.keys(stockStore.stock).length === 0) {
     await stockStore.fetchStock();
@@ -95,7 +147,6 @@ const loadDashboardData = async () => {
 
   stock.value = { ...stockStore.stock };
 };
-
 
 const initializeSocket = () => {
   stockStore.initSocket();
@@ -110,7 +161,7 @@ const initializeSocket = () => {
 
   socket.on("stock-updated", async () => {
     console.log("Real-time stock update received");
-    await stockStore.fetchStock();
+    await stockStore.innitSocket();
     stock.value = { ...stockStore.stock };
   });
 };
@@ -130,37 +181,30 @@ onUnmounted(() => {
 });
 </script>
 
-
 <style scoped>
-h3 {
-  letter-spacing: 0.5px;
+/* Smooth transitions for interactive elements */
+li {
+  transition: all 0.2s ease;
 }
 
-ul {
-  padding-left: 20px;
+/* Better visual hierarchy for empty states */
+.text-center svg {
+  transition: transform 0.3s ease;
 }
 
-ul li {
-  font-size: 1rem;
+.text-center:hover svg {
+  transform: scale(1.1);
 }
 
-ul li:hover {
-  background-color: #f3f4f6;
-  cursor: pointer;
+/* Subtle hover effects for cards */
+.bg-white:hover {
+  transform: translateY(-2px);
 }
 
-h2,
-h3,
-strong,
-span {
-  text-transform: uppercase;
-}
-
-.today {
-  text-transform: lowercase;
-}
-
-.text-gray-400 {
-  font-size: 0.875rem;
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid-cols-2 {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

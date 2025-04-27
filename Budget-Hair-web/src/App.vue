@@ -22,10 +22,12 @@ onUnmounted(() => {
 </script>
 
 <template>
+ <div class="bg-gray-50 min-h-screen">
   <Navbar />
   <div class="mt-20">
     <RouterView />
   </div>
+ </div>
 </template>
 
 <style scoped>
