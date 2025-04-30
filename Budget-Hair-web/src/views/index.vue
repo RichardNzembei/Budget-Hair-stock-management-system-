@@ -51,7 +51,7 @@
                     <h3 class="font-medium text-gray-800 text-sm">{{ sale.productType.toUpperCase() }}</h3>
                     <p class="text-xs text-gray-500">
                       {{ sale.productSubtype.toUpperCase() }}
-                      <span class="text-green-500 font-semibold ml-1">+{{ sale.quantitySold }}</span>
+                      <span class="text-green-500 font-semibold ml-1">{{ sale.quantitySold }} sold</span>
                     </p>
                   </div>
                 </div>
