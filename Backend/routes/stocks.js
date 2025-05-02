@@ -193,37 +193,34 @@ router.get("/stock", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
-router.get("/stock/history", async (req, res) => {
+router.get('/stock/history', async (req, res) => {
   try {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayEnd = new Date();
-    todayEnd.setHours(23, 59, 59, 999);
+    const now = new Date();
+    const startOfDay = new Date(now.setHours(0, 0, 0, 0)); 
+    const endOfDay = new Date(now.setHours(23, 59, 59, 999)); 
 
-    console.log("Query range:", todayStart, todayEnd); // Debug log
+    console.log('Query range:', startOfDay.toISOString(), endOfDay.toISOString()); 
 
     const snapshot = await firestore
-      .collection("stock_history")
-      .where("timestamp", ">=", admin.firestore.Timestamp.fromDate(todayStart))
-      .where("timestamp", "<=", admin.firestore.Timestamp.fromDate(todayEnd))
+      .collection('stock_history')
+      .where('timestamp', '>=', startOfDay.toISOString())
+      .where('timestamp', '<=', endOfDay.toISOString())
+      .orderBy('timestamp', 'desc')
       .get();
 
-    const history = [];
-    snapshot.forEach((doc) => {
+    const history = snapshot.docs.map((doc) => {
       const data = doc.data();
-
-      if (data.timestamp) {
-        data.timestamp = data.timestamp.toDate();
+      if (data.timestamp instanceof admin.firestore.Timestamp) {
+        data.timestamp = data.timestamp.toDate().toISOString();
       }
-
-      history.push(data);
+      return { id: doc.id, ...data };
     });
 
-    console.log("Stock history fetched from Firestore:", history); // Debug log
+    console.log('Fetched stock history for today:', history); 
     res.status(200).json(history);
   } catch (error) {
-    console.error("Error fetching stock history:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error('Error fetching stock history:', error);
+    res.status(500).json({ error: 'Server error during stock history fetching' });
   }
 });
 
