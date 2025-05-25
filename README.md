@@ -1,0 +1,49 @@
+# 🧾 Budget Hair – Stock Management System
+
+A custom-built stock management system for **Budget Hair**, a braids retail shop in Kenya. Designed for simplicity, speed, and real-time inventory tracking, this system helps retail businesses manage products, track sales, and restock with confidence.
+
+---
+
+## ✨ Features
+
+- 📦 **Inventory Management**
+  - Add, edit, or remove braid products.
+  - Real-time stock tracking using Firebase.
+  - Low-stock alerts to restock before running out.
+
+- 💰 **Sales Logging**
+  - Track daily sales per product.
+  - View sales history by date.
+
+- 🧾 **Supplier Management**
+  - Record purchases and restocks.
+  - Attach supplier info and track purchase trends.
+
+- 📊 **Visual Reports**
+  - Sales charts (daily, weekly, monthly).
+  - Inventory heatmap and performance dashboards.
+
+- 👥 **User Roles**
+  - Admins: Full access to all features.
+  - Staff: Can only log sales and view inventory.
+
+- 📱 **Mobile-Ready UI**
+  - Fully responsive: usable on phones, tablets, and desktop.
+
+---
+
+## 🧰 Tech Stack
+
+- **Frontend**: Vue.js 3 + Tailwind CSS
+- **Backend**: Node Js (Express Js)
+- **Database**: Firebase (Firestore and Realtime Database)
+- **Hosting**:Vercel for Frontend and Render for Backend
+- **Icons**: Lucide Icons
+- **Build Tool**: Vite
+
+## 📬 Contact
+-To enquire from the Client reach out to me to get clents Details
+
+
+**📱 Phone**: 0716 899 396
+
