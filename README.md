@@ -42,8 +42,10 @@ A custom-built stock management system for **Budget Hair**, a braids retail shop
 - **Build Tool**: Vite
 
 ## 📬 Contact
--To enquire from the Client reach out to me to get clents Details
 
+> 💬 **To enquire from the client (Budget Hair), please reach out to me first to get client confirmation details.**
 
-**📱 Phone**: 0716 899 396
+**Developer Contact**  
+📱 **Phone**: [`0716 899 396`](tel:+254716899396)  
+📧 **Email**: *richardsonreuben78@gmail.com*  
 
