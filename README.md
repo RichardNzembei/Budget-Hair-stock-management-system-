@@ -38,6 +38,8 @@ A custom-built stock management system for **Budget Hair**, a braids retail shop
 - **Backend**: Node Js (Express Js)
 - **Database**: Firebase (Firestore and Realtime Database)
 - **Hosting**:Vercel for Frontend and Render for Backend
+- **Notifications**: Push API
+- **RealTime Interactions**: Websockets
 - **Icons**: Lucide Icons
 - **Build Tool**: Vite
 
