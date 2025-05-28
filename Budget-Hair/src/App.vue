@@ -37,7 +37,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <Navbar />
+  <Navbar/>
   <Notification />
   <div class="mt-20 bg-gray-50 min-h-screen">
     <RouterView />

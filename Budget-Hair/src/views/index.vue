@@ -1,4 +1,4 @@
-```vue
+
 <template>
   <div class="container mx-auto py-8 px-4 max-w-6xl">
     <h1 class="text-md font-bold mb-8 text-center text-sky-600 uppercase tracking-wider">
@@ -317,4 +317,3 @@ button:focus {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 </style>
-```

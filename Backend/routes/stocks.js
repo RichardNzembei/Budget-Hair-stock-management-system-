@@ -196,33 +196,39 @@ router.get("/stock", async (req, res) => {
 router.get('/stock/history', async (req, res) => {
   try {
     const now = new Date();
-    const startOfDay = new Date(now.setHours(0, 0, 0, 0)); 
-    const endOfDay = new Date(now.setHours(23, 59, 59, 999)); 
 
-    console.log('Query range:', startOfDay.toISOString(), endOfDay.toISOString()); 
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    console.log('Query range:', startOfDay.toISOString(), endOfDay.toISOString());
 
     const snapshot = await firestore
       .collection('stock_history')
-      .where('timestamp', '>=', startOfDay.toISOString())
-      .where('timestamp', '<=', endOfDay.toISOString())
+      .where('timestamp', '>=', startOfDay)  // ✅ Use Date object, not string
+      .where('timestamp', '<=', endOfDay)    // ✅ Use Date object, not string
       .orderBy('timestamp', 'desc')
       .get();
 
     const history = snapshot.docs.map((doc) => {
       const data = doc.data();
+
+      // Convert Firestore Timestamp to ISO string
       if (data.timestamp instanceof admin.firestore.Timestamp) {
         data.timestamp = data.timestamp.toDate().toISOString();
       }
+
       return { id: doc.id, ...data };
     });
 
-    console.log('Fetched stock history for today:', history); 
+    console.log('Fetched stock history for today:', history);
     res.status(200).json(history);
   } catch (error) {
-    console.error('Error fetching stock history:', error);
+    console.error('Error fetching stock history:', error.message, error.stack);
     res.status(500).json({ error: 'Server error during stock history fetching' });
   }
 });
-
 
 module.exports = router;

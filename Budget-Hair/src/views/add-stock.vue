@@ -86,3 +86,4 @@ const addStock = async () => {
   }
 };
 </script>
+provihow can i deal with de the final code
