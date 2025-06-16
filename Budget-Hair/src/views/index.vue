@@ -62,13 +62,28 @@
 
       <!-- STOCK OVERVIEW -->
       <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
-        <div class="flex items-center mb-5">
+        <div class="flex items-center justify-between mb-5">
           <h2 class="font-semibold text-lg text-gray-800 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-sky-500" viewBox="0 0 20 20" fill="currentColor">
               <path fill-rule="evenodd" d="M10 2a4 4 0 00-4 4v1H5a1 1 0 00-.994.89l-1 9A1 1 0 004 18h12a1 1 0 00.994-1.11l-1-9A1 1 0 0015 7h-1V6a4 4 0 00-4-4zm2 5V6a2 2 0 10-4 0v1h4zm-6 3a1 1 0 112 0 1 1 0 01-2 0zm7-1a1 1 0 100 2 1 1 0 000-2z" clip-rule="evenodd" />
             </svg>
             Stock Overview
           </h2>
+            <button @click="refreshStock"
+    class="flex items-center text-sm text-sky-600 hover:text-sky-800 font-medium transition">
+    <svg v-if="!refreshing" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 4v6h6M20 20v-6h-6M4 20l5-5M20 4l-5 5" />
+    </svg>
+    <svg v-else class="animate-spin h-5 w-5 mr-1 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+    <span>{{ refreshing ? 'Refreshing...' : 'Refresh' }}</span>
+  </button>
         </div>
 
         <!-- Loading state for stock -->
@@ -185,6 +200,18 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useStockStore } from '@/stores/stockStore';
 import { useSalesStore } from '@/stores/salesStore';
+const refreshing = ref(false);
+
+const refreshStock = async () => {
+  refreshing.value = true;
+  try {
+    await stockStore.fetchStock({ force: true }); // optional 'force' param if you support it
+  } catch (error) {
+    console.error('Failed to refresh stock:', error);
+  } finally {
+    refreshing.value = false;
+  }
+};
 
 const stockStore = useStockStore();
 const salesStore = useSalesStore();

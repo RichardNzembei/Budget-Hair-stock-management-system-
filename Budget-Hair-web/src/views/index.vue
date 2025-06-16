@@ -67,10 +67,25 @@
       <!-- STOCK OVERVIEW CARD -->
       <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100 transition-all hover:shadow-xl">
         <!-- Card Header with accent border -->
-        <div class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-white p-5">
+        <div class="border-b border-emerald-100 bg-gradient-to-r from-emerald-50 to-white p-5 flex items-center justify-between">
           <h2 class="font-semibold text-gray-700 text-md text-center">
             STOCK OVERVIEW
           </h2>
+            <button @click="refreshStock"
+    class="flex items-center text-sm text-sky-600 hover:text-sky-800 font-medium transition">
+    <svg v-if="!refreshing" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" fill="none" viewBox="0 0 24 24"
+      stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+        d="M4 4v6h6M20 20v-6h-6M4 20l5-5M20 4l-5 5" />
+    </svg>
+    <svg v-else class="animate-spin h-5 w-5 mr-1 text-sky-600" xmlns="http://www.w3.org/2000/svg" fill="none"
+      viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+      <path class="opacity-75" fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+    </svg>
+    <span>{{ refreshing ? 'Refreshing...' : 'Refresh' }}</span>
+  </button>
         </div>
 
         <!-- Card Body -->
@@ -119,6 +134,19 @@ import { useSalesStore } from "@/stores/salesStore";
 
 const stockStore = useStockStore();
 const salesStore = useSalesStore();
+const refreshing = ref(false);
+
+const refreshStock = async () => {
+  refreshing.value = true;
+  try {
+    await stockStore.fetchStock({ force: true }); // optional 'force' param if you support it
+  } catch (error) {
+    console.error('Failed to refresh stock:', error);
+  } finally {
+    refreshing.value = false;
+  }
+};
+
 
 const stock = ref({});
 const salesItems = computed(() => {
