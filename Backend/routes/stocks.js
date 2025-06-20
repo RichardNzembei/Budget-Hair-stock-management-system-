@@ -132,7 +132,8 @@ router.delete("/stock", async (req, res) => {
       `Deleting subtype: ${productSubtype} from product type: ${productType}`
     );
 
-    await stockRef.update({ [productSubtype]: FieldValue.delete() });
+    const FieldPath = admin.firestore.FieldPath;
+    await stockRef.update(new FieldPath(productSubtype), FieldValue.delete());
 
     req.io.emit("stock-updated", {
       productType,
@@ -140,18 +141,17 @@ router.delete("/stock", async (req, res) => {
       newStock: null,
     });
 
-    res
-      .status(200)
-      .json({
-        message: "Stock subtype deleted successfully",
-        productType,
-        productSubtype,
-      });
+    res.status(200).json({
+      message: "Stock subtype deleted successfully",
+      productType,
+      productSubtype,
+    });
   } catch (error) {
     console.error("Error deleting stock:", error);
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 router.delete("/stock/:productType", async (req, res) => {
   const { productType } = req.params;
