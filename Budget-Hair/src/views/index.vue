@@ -9,7 +9,7 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <!-- SALES OVERVIEW -->
-      <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
+ <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-100">
         <div class="flex items-center justify-between mb-5">
           <h2 class="font-semibold text-lg text-gray-800 flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-sky-500" viewBox="0 0 20 20" fill="currentColor">
@@ -23,16 +23,15 @@
           </span>
         </div>
 
-        <!-- Loading state for sales -->
-        <div v-if="salesStore.loading" class="space-y-4">
+        <div v-show="salesStore.loading" class="space-y-4">
           <div v-for="n in 3" :key="n" class="bg-gray-100 p-4 rounded-lg animate-pulse">
             <div class="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
             <div class="h-3 bg-gray-200 rounded w-1/2"></div>
           </div>
         </div>
 
-        <div v-else-if="salesItems.length === 0" class="text-center py-8">
-          <div class="inline-block p-4 bg-gray-50 rounded-full mb-3">
+        <div v-show="!salesStore.loading && salesItems.length === 0" class="text-center py-8">
+          <div class="inline-block p-4 bg-gray-50 rounded-full mb-3 empty-state-icon">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -40,9 +39,9 @@
           <p class="text-gray-500 font-medium">No sales recorded for today</p>
         </div>
 
-        <ul v-else class="space-y-3">
+        <ul v-show="!salesStore.loading && salesItems.length > 0" class="space-y-3">
           <li v-for="sale in salesItems" :key="sale.id"
-            class="group bg-white p-4 rounded-lg border border-gray-200 hover:border-sky-200 hover:shadow-md transition-all duration-200 flex justify-between items-center">
+            class="group bg-white p-4 rounded-lg border border-gray-200 hover:border-sky-200 hover:shadow-md transition-transform duration-150 ease-in-out flex justify-between items-center">
             <div>
               <div class="flex items-center mb-1">
                 <span class="inline-block w-2 h-2 rounded-full bg-sky-500 mr-2"></span>
@@ -200,31 +199,25 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 import { useStockStore } from '@/stores/stockStore';
 import { useSalesStore } from '@/stores/salesStore';
-const refreshing = ref(false);
-
-const refreshStock = async () => {
-  refreshing.value = true;
-  try {
-    await stockStore.fetchStock({ force: true }); // optional 'force' param if you support it
-  } catch (error) {
-    console.error('Failed to refresh stock:', error);
-  } finally {
-    refreshing.value = false;
-  }
-};
 
 const stockStore = useStockStore();
 const salesStore = useSalesStore();
 
-const stock = computed(() => stockStore.stock);
-const dropdownVisible = ref({}); // Track visibility of dropdown for each stock item
+const refreshing = ref(false);
+const dropdownVisible = ref({});
 
+const stock = computed(() => stockStore.stock);
+
+// Sales filtered and sorted for today
 const salesItems = computed(() => {
-  const today = new Date().setHours(0, 0, 0, 0);
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+
   return salesStore.sales
     .filter((sale) => {
-      const saleDate = new Date(sale.saleTime).setHours(0, 0, 0, 0);
-      return saleDate === today;
+      const saleDate = new Date(sale.saleTime);
+      saleDate.setHours(0, 0, 0, 0);
+      return saleDate.getTime() === todayStart.getTime();
     })
     .sort((a, b) => new Date(b.saleTime) - new Date(a.saleTime));
 });
@@ -234,42 +227,14 @@ const formatSaleTime = (saleTime) => {
   return new Date(saleTime).toLocaleTimeString(undefined, options);
 };
 
-const editStock = async (productType, productSubtype) => {
-  const newQuantity = prompt(
-    `Enter the new quantity for ${productType.toUpperCase()} - ${productSubtype.toUpperCase()}:`,
-    stock.value[productType][productSubtype]
-  );
-
-  if (newQuantity !== null) {
-    const parsedQuantity = parseInt(newQuantity, 10);
-    if (!isNaN(parsedQuantity) && parsedQuantity >= 0) {
-      await stockStore.editStock(productType, productSubtype, parsedQuantity);
-      alert('Stock updated successfully!');
-    } else {
-      alert('Invalid input. Please enter a valid number.');
-    }
-  }
-};
-
-const deleteProductSubtype = async (productType, productSubtype) => {
-  const confirmDelete = confirm(
-    `Are you sure you want to delete the ${productSubtype.toUpperCase()} subtype from ${productType.toUpperCase()}?`
-  );
-
-  if (confirmDelete) {
-    await stockStore.deleteStock(productType, productSubtype);
-    alert(`${productSubtype.toUpperCase()} deleted successfully!`);
-  }
-};
-
-const deleteProductType = async (productType) => {
-  const confirmDelete = confirm(
-    `Are you sure you want to delete the entire ${productType.toUpperCase()} product type?`
-  );
-
-  if (confirmDelete) {
-    await stockStore.deleteProductType(productType);
-    alert(`${productType.toUpperCase()} product type deleted successfully!`);
+const refreshStock = async () => {
+  refreshing.value = true;
+  try {
+    await stockStore.fetchStock({ force: true });
+  } catch (error) {
+    console.error('Failed to refresh stock:', error);
+  } finally {
+    refreshing.value = false;
   }
 };
 
@@ -281,6 +246,44 @@ const toggleDropdown = (productType, productSubtype) => {
 const closeDropdown = (event) => {
   if (!event.target.closest('.relative')) {
     dropdownVisible.value = {};
+  }
+};
+
+const editStock = async (productType, productSubtype) => {
+  const currentQuantity = stock.value[productType]?.[productSubtype] ?? 0;
+  const input = prompt(
+    `Enter the new quantity for ${productType.toUpperCase()} - ${productSubtype.toUpperCase()}:`,
+    currentQuantity
+  );
+
+  if (input !== null) {
+    const quantity = parseInt(input, 10);
+    if (!isNaN(quantity) && quantity >= 0) {
+      await stockStore.editStock(productType, productSubtype, quantity);
+      alert('Stock updated successfully!');
+    } else {
+      alert('Invalid input. Please enter a valid non-negative number.');
+    }
+  }
+};
+
+const deleteProductSubtype = async (productType, productSubtype) => {
+  const confirmed = confirm(
+    `Are you sure you want to delete the ${productSubtype.toUpperCase()} subtype from ${productType.toUpperCase()}?`
+  );
+  if (confirmed) {
+    await stockStore.deleteStock(productType, productSubtype);
+    alert(`${productSubtype.toUpperCase()} deleted successfully!`);
+  }
+};
+
+const deleteProductType = async (productType) => {
+  const confirmed = confirm(
+    `Are you sure you want to delete the entire ${productType.toUpperCase()} product type?`
+  );
+  if (confirmed) {
+    await stockStore.deleteProductType(productType);
+    alert(`${productType.toUpperCase()} product type deleted successfully!`);
   }
 };
 
@@ -308,12 +311,10 @@ ul {
 ul::-webkit-scrollbar {
   width: 6px;
 }
-
 ul::-webkit-scrollbar-track {
   background: #f8fafc;
   border-radius: 3px;
 }
-
 ul::-webkit-scrollbar-thumb {
   background-color: #e2e8f0;
   border-radius: 3px;
@@ -325,7 +326,7 @@ button:focus {
   outline-offset: 2px;
 }
 
-/* Pulse animation for empty states */
+/* Pulse animation for empty or loading states */
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
@@ -334,12 +335,9 @@ button:focus {
     opacity: 0.5;
   }
 }
-
 .empty-state-icon {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
-
-/* Loading animation */
 .animate-pulse {
   animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
