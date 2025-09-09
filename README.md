@@ -24,7 +24,7 @@ A custom-built stock management system for **Budget Hair**, a braids retail shop
   - Inventory heatmap and performance dashboards.
 
 - 👥 **User Roles**
--  - Owner: can view stock sales and has realtime dash updates .
+- - Owner: can view stock sales and has realtime dash updates .
   - Admins(system manager): Full access to all features.
   - Staff: Can only view sales and inventory.
 
