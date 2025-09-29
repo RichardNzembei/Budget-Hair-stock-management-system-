@@ -8,8 +8,15 @@
           </svg>
           <span class="text-sm">Home</span>
         </router-link>
-        
-      
+        <router-link to="/sold-item" aria-label="Sold Item"
+                     class="text-purple-500 hover:text-red-700 flex flex-col items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1">
+            <path fill-rule="evenodd"
+                  d="M12 3.75a.75.75 0 01.75.75v6h6a.75.75 0 110 1.5h-6v6a.75.75 0 11-1.5 0v-6h-6a.75.75 0 110-1.5h6v-6a.75.75 0 01.75-.75zm-1.5 8.25v-6a.75.75 0 00-1.5 0v6a.75.75 0 001.5 0zm-6-1.5h6v1.5H6a.75.75 0 010-1.5zm12 0h-6v1.5h6a.75.75 0 010-1.5z"
+                  clip-rule="evenodd" />
+          </svg>
+          <span class="text-sm">Sold Item</span>
+        </router-link>
         <router-link to="/records" aria-label="Records"
           class="text-purple-500 hover:text-red-700 flex flex-col items-center">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6 mb-1">
